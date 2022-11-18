@@ -301,12 +301,10 @@ function onIntersect() {
   var exposure = document.getElementById("exposure").value;  
   var hazards = document.getElementById("hazard").value;
   var modalLoad = document.getElementById("modalLoad");
-  if(hazard != "Find_Haz" && exposure != "Find"){
-  
-  let hazard = document.getElementById("hazard").value;
+  if(hazards != "Find_Haz" && exposure != "Find"){
   
   if(exposure == "bldgs"){
-    if(hazard in dict){
+    if(hazards in dict){
       tableContent()
 
     }else{
@@ -623,8 +621,6 @@ function ajaxData(exposure, hazards){
                 row[key] = column;
                 
             });
-            console.log(row)
-
             bldg_ajax.push(row);
             });
             

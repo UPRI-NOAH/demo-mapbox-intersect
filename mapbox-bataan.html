@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>Display a map on a webpage</title>
+<title>Bataan Layer intersection</title>
 <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
@@ -55,6 +55,20 @@ td, th {
   background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
 }
 
+.modalload {
+  display: none; /* Hidden by default */
+  position: fixed; /* Stay in place */
+  z-index: 1; /* Sit on top */
+  padding-top: 150px; /* Location of the box */
+  left: 0;
+  top: 0;
+  width: 100%; /* Full width */
+  height: 100%; /* Full height */
+  overflow: auto; /* Enable scroll if needed */
+  background-color: rgb(0,0,0); /* Fallback color */
+  background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+}
+
 /* Modal Content */
 .modal-content {
   background-color: #fefefe;
@@ -62,6 +76,21 @@ td, th {
   padding: 20px;
   border: 1px solid #888;
   width: 75%;
+}
+
+.modal-content-load {
+  background-color: #fefefe;
+  margin: auto;
+  padding: 20px;
+  border: 1px solid #888;
+  width: 35%;
+}
+
+.center {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  width: 30%;
 }
 
 /* The Close Button */
@@ -178,6 +207,20 @@ td, th {
     </div>
   
   </div>
+
+  <div id="modalLoad" class="modalload">
+
+    <!-- Modal content -->
+    <div id="modal-load-body" class="modal-content-load">
+      <!-- <span class="close">&times;</span> -->
+      <h4 class="w3-sans-serif">Intersection still loading. Please wait...</h4>
+      <!-- <div class="loader"></div> -->
+      <img src="noah-loading.gif" class="center" width="auto" height="100px">
+
+    </div>
+  
+  </div>
+
 <div id="map"></div>
 <div class='map-overlay' id='legend'></div>
 
@@ -284,7 +327,7 @@ layers.forEach((layer, i) => {
   key.className = 'legend-key';
   
   if(color?.toString().endsWith(".png")){
-    console.log(color)
+    
     key.style.backgroundImage =  `url(${color})`;;
   }
   else{
@@ -303,7 +346,31 @@ function closeModal(){
 }
 
 function onIntersect() {
+    var exposure = document.getElementById("exposure").value;  
+    var hazards = document.getElementById("hazard").value;
+    var modalLoad = document.getElementById("modalLoad");
+    if(hazard != "Find_Haz" && exposure != "Find"){
+
+    let hazard = document.getElementById("hazard").value;
+
+    // ajaxData(exposure, hazards)
+    if(exposure == "bldgs"){
+    if(hazards in dict){
+      tableContent()
+
+    }else{
+      ajaxData(exposure, hazards)
+    }
+  }
+}else{
+  alert('Pick Options First!')
+}
+}
+
+function tableContent(){
   
+    modalLoad.style.display = "none";
+
     const div = document.getElementById('modal-body');
     const btn = document.createElement("button");
     btn.innerHTML = "X";
@@ -314,8 +381,6 @@ function onIntersect() {
   
     var val = document.getElementById("exposure").value;
     let hazard = document.getElementById("hazard").value;
-    console.log(dict[hazard])
-    if(hazard != "Find_Haz" && val != "Find"){
     let first_row = ''
     let second_row = ''
     let third_row = ''
@@ -357,23 +422,45 @@ function onIntersect() {
       
     for(var i=0; i < all_intersect.length;i++){
       var properties =  all_intersect[i].properties
+      let name = all_intersect[i].Name
+      var area_total = all_intersect[i]["area_total"]
+      var intersect_total = all_intersect[i]["intersect_total"]
+      var percentage_total = all_intersect[i]["percentage_total"]
+      var percentage_exp = all_intersect[i]["Percentage of Exposed"]
+      var area_val = all_intersect[i]["Area"]
+      var all_haz = all_intersect[i]["All Hazard"]
+      var sensi_score = all_intersect[i]["Sensitivity Score"]
+      var mag = all_intersect[i]["Mag"]
+      let expo_score = all_intersect[i]["Exposure Score"]
+      var severity_score = all_intersect[i]["Severity Score"]
+      var risk_score = all_intersect[i]["Risk Score"]
+      var risk_categ = all_intersect[i]["Risk Category"]
       
-      table += `<tr>
-                <td>${properties.Name}</td>
-                <td>${separator(properties["Area"])}</td>
-                <td>${separator(properties["All Hazard"])}</td>
-                <td>${properties["Percentage of Exposed"]}%</td>   
-                <td>${properties["Exposure Score"]}</td>
-                <td>${properties["Sensitivity Score"]}</td>
-                <td>${properties["Mag"]}</td>
-                <td>${properties["Severity Score"]}</td>
-                <td>${properties["Risk Score"]}</td>
-                <td>${properties["Risk Category"]}</td>
-              </tr>`;
+      if(name == undefined || name == "" || area_total == undefined || intersect_total == undefined || percentage_total == undefined
+      || percentage_exp == undefined || area_val == undefined || all_haz == undefined || sensi_score == undefined || mag == undefined
+      || expo_score == undefined || severity_score == undefined || risk_score == undefined || risk_categ == undefined){
         
+      }else{
+        name = name.replace('"','')
+        expo_score = expo_score.replace('"','')
+        mag = mag.replace('"','')
+        
+      table += `<tr>
+                <td>${name.replace('"','')}</td>
+                <td>${separator(area_val)}</td>
+                <td>${separator(all_haz)}</td>
+                <td>${percentage_exp}%</td>   
+                <td>${expo_score.replace('"','')}</td>
+                <td>${sensi_score}</td>
+                <td>${mag.replace('"','')}</td>
+                <td>${severity_score}</td>
+                <td>${risk_score}</td>
+                <td>${risk_categ}</td> 
+              </tr>`;
+            }
 
     }
-    table += "</tbody><tfoot><tr><th colspan='1' style='text-align:left; background-color:#0166ff; color:#FFFFFF'>TOTAL:</th><th style='background-color:#0166ff; color:#FFFFFF'>"+separator(properties["area_total"])+"</th><th style='background-color:#0166ff; color:#FFFFFF'>"+separator(properties["intersect_total"])+"</th><th style='background-color:#0166ff; color:#FFFFFF'>"+properties["percentage_total"]+"%</th><th style='background-color:#0166ff; color:#FFFFFF'></th><th style='background-color:#0166ff; color:#FFFFFF'></th><th style='background-color:#0166ff; color:#FFFFFF'></th><th style='background-color:#0166ff; color:#FFFFFF'></th><th style='background-color:#0166ff; color:#FFFFFF'></th><th style='background-color:#0166ff; color:#FFFFFF'></th></tr></tfoot></table>";
+    table += "</tbody><tfoot><tr><th colspan='1' style='text-align:left; background-color:#0166ff; color:#FFFFFF'>TOTAL:</th><th style='background-color:#0166ff; color:#FFFFFF'>"+separator(all_intersect[0].area_total)+"</th><th style='background-color:#0166ff; color:#FFFFFF'>"+separator(all_intersect[0].intersect_total)+"</th><th style='background-color:#0166ff; color:#FFFFFF'>"+all_intersect[0].percentage_total+"%</th><th style='background-color:#0166ff; color:#FFFFFF'></th><th style='background-color:#0166ff; color:#FFFFFF'></th><th style='background-color:#0166ff; color:#FFFFFF'></th><th style='background-color:#0166ff; color:#FFFFFF'></th><th style='background-color:#0166ff; color:#FFFFFF'></th><th style='background-color:#0166ff; color:#FFFFFF'></th></tr></tfoot></table>";
 
 
     
@@ -404,11 +491,7 @@ function onIntersect() {
         });
     }
     }
-  }else{
-    alert('Pick Options First!')
-    all_intersect = undefined
 
-  }
   
   $(document).ready(function () {
     $('#example').dataTable({
@@ -420,7 +503,7 @@ function onIntersect() {
 let intersect_data
 let url = ''
 let all_intersect
-let bldg_ajax
+// let bldg_ajax
 let pop_ajax
 let source
 let haz_type = document.getElementById("hazard").value;
@@ -429,7 +512,7 @@ function onChangeHaz() {
   var hazards = document.getElementById("hazard").value;
   let url = ""
   let pop_url = ""
-  ajaxData(exposure, hazards)
+  // ajaxData(exposure, hazards)
   if(hazards != "5yr" && hazards != "Find_Haz"){
     url = "https://upri-noah.s3.ap-southeast-1.amazonaws.com/test/bataan_haz_intersect_"+hazards+".geojson"
   }
@@ -501,13 +584,14 @@ let dict = {}
 let dict2 = {}
 
 function ajaxData(exposure, hazards){
+  modalLoad.style.display = "block";
   let url = ""
   let pop_url = ""
   if(hazards != "5yr" && hazards != "Find_Haz" ){
-    url = "https://upri-noah.s3.ap-southeast-1.amazonaws.com/test/bataan_haz_intersect_"+hazards+".geojson"
+    url = "https://upri-noah.s3.ap-southeast-1.amazonaws.com/test/bataan_haz_intersect_"+hazards
   }
   else{
-    url="https://upri-noah.s3.ap-southeast-1.amazonaws.com/test/bataan_haz_intersect.geojson"
+    url="https://upri-noah.s3.ap-southeast-1.amazonaws.com/test/bataan_haz_intersect"
   }
   if(exposure == "bldgs"){
     source = 'bldg_intersect_'+hazards
@@ -515,23 +599,44 @@ function ajaxData(exposure, hazards){
         if(!hasKey){
           
           intersect_data = $.ajax({
-            url: url,
-            dataType: "json",
+            url: url+".csv",
+            dataType: "text",
             success: console.log("new test"),
             error: function (xhr) {
               alert(xhr.statusText)
             }
           })
         $.when(intersect_data).done(function () {
-          bldg_ajax = intersect_data.responseJSON.features
+            let bldg_ajax = []
+
+            var rows = intersect_data.responseText.split(/\n/g);
+            var keys = rows.shift().split(",");
+            rows.forEach(raw_row => {  
+            var row = {};
+            var columns = raw_row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+            
+            columns.forEach((column, index)=>{
+                let key = keys[index];
+                if(!key) return;
+                if(key.includes("Category")){
+                  key = "Risk Category"
+                }
+
+                row[key] = column;
+            });
+            
+            bldg_ajax.push(row);
+            });
+            
           dict[hazards] = bldg_ajax
-          console.log(dict)
+          tableContent()
+
         });
 
         if (map.getSource(source) == undefined){
           map.addSource(source, {
           type: 'geojson',
-          data: url
+          data: url+".geojson"
           });
         }
       }
@@ -543,7 +648,7 @@ function onChangeExpo() {
   var exposure = document.getElementById("exposure").value;  
   var hazards = document.getElementById("hazard").value;
 
-  ajaxData(exposure, hazards)
+  // ajaxData(exposure, hazards)
   if(exposure == "bldgs"){
 
       if (map.getLayer('bldg') == undefined){
@@ -717,6 +822,7 @@ class ToggleControl {
 }
 
 var modal = document.getElementById("myModal");
+var modalLoad = document.getElementById("modalLoad");
 var span = document.getElementsByClassName("close")[0];
 
 // When the user clicks on <span> (x), close the modal

@@ -301,6 +301,7 @@ function onIntersect() {
   var exposure = document.getElementById("exposure").value;  
   var hazards = document.getElementById("hazard").value;
   var modalLoad = document.getElementById("modalLoad");
+  if(hazard != "Find_Haz" && exposure != "Find"){
   
   let hazard = document.getElementById("hazard").value;
   
@@ -324,7 +325,10 @@ function onIntersect() {
     }
   }
   
-    
+}else{
+  alert('Pick Options First!')
+}
+
 }
 
 function tableContent(){
@@ -339,8 +343,7 @@ function tableContent(){
   btn.style = "top:1%;right:1%;position:absolute;"
   btn.style.border="none"
   var val = document.getElementById("exposure").value;
-    let hazard = document.getElementById("hazard").value;
-    if(hazard != "Find_Haz" && val != "Find"){
+  let hazard = document.getElementById("hazard").value;
     let first_row = ''
     let second_row = ''
     let third_row = ''
@@ -464,11 +467,7 @@ function tableContent(){
       });
     }
     }
-  }else{
-    alert('Pick Options First!')
-    all_intersect = undefined
 
-  }
   
   $(document).ready(function () {
     $('#example').dataTable();
@@ -618,15 +617,14 @@ function ajaxData(exposure, hazards){
             columns.forEach((column, index)=>{
                 var key = keys[index];
                 if(!key) return;       
-                if(key === "Coordinates"){
-                column = column.replace(/""/g, '"');
-                column = column.substring(1, column.length-1);
-                column = column.replace(/([a-zA-Z_]+):/g, `"$1":`);
-                try{ column = JSON.parse(`{${column}}`); }catch(e){}
+                if(key.includes("Exposure Score")){
+                  key = "Exposure Score"
                 }
                 row[key] = column;
                 
             });
+            console.log(row)
+
             bldg_ajax.push(row);
             });
             

@@ -117,6 +117,34 @@ td, th {
   color: white;
 }
 
+.map-overlay {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  background: #fff;
+  margin-right: 20px;
+  font-family: Arial, sans-serif;
+  overflow: auto;
+  border-radius: 3px;
+}
+
+#legend {
+  padding: 10px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  line-height: 18px;
+  height: 200px;
+  margin-bottom: 40px;
+  width: 200px;
+}
+
+.legend-key {
+  display: inline-block;
+  border-radius: 20%;
+  width: 15px;
+  height: 15px;
+  margin-right: 5px;
+}
+
 .table-striped>tbody>tr:nth-child(odd)>td, 
 .table-striped>tbody>tr:nth-child(odd)>th {
    background-color: white;
@@ -127,7 +155,14 @@ td, th {
    background-color: #bce8f1; 
  }
 
- .table th,
+ .dataTable thead .sorting_asc,
+ .dataTable thead .sorting_desc,
+.dataTable thead .sorting {
+    padding-left: 0.75rem !important;
+    padding-right: 0.20rem !important;
+ }
+
+.table th,
 .table td {
   font-size: 12px
 }
@@ -144,6 +179,8 @@ td, th {
   
   </div>
 <div id="map"></div>
+<div class='map-overlay' id='legend'></div>
+
 <select class="form-control-sm" id="hazard">
   <option  value="Find_Haz">Choose Hazard</option>
   <option value="5yr">5 year Bataan</option>
@@ -180,10 +217,91 @@ document.getElementById('exposure').addEventListener('change', onChangeExpo)
 document.getElementById('hazard').addEventListener('change', onChangeHaz)
 document.getElementById('intersect').addEventListener('click', onIntersect)
 
+  map.loadImage(
+  'https://upri-noah.s3.ap-southeast-1.amazonaws.com/test/blue_stripe.png',
+  (err, image) => {
+  // Throw an error if something goes wrong.
+  if (err) throw err;     
+  // Add the image to the map style.
+    map.addImage('blue-stripe', image);
+  
+  }
+  );
+  map.loadImage(
+  'https://upri-noah.s3.ap-southeast-1.amazonaws.com/test/purple_stripe.png',
+  (err, image) => {
+  // Throw an error if something goes wrong.
+  if (err) throw err;     
+  // Add the image to the map style.
+    map.addImage('purple-stripe', image);
+  
+  }
+  );   
+  
+  map.loadImage(
+  'https://upri-noah.s3.ap-southeast-1.amazonaws.com/test/black_stripe.png',
+  (err, image) => {
+  // Throw an error if something goes wrong.
+  if (err) throw err;     
+  // Add the image to the map style.
+    map.addImage('black-stripe', image);
+  
+  }
+  );   
+
+const layers = [
+  '<b>Exposure</b>',
+  'Critical Facilities',
+  '<b>Vulnerability</b>',
+  'High Risk',
+  'Moderate Risk',
+  'Low Risk',
+  '<b>Flood Hazard</b>',
+  'Low Hazard',
+  'Medium Hazard',
+  'High Hazard',
+];
+
+const colors = [
+  '',
+  'blue',
+  '',
+  'https://upri-noah.s3.ap-southeast-1.amazonaws.com/test/blue_stripe.png',
+  'https://upri-noah.s3.ap-southeast-1.amazonaws.com/test/purple_stripe.png',
+  'https://upri-noah.s3.ap-southeast-1.amazonaws.com/test/black_stripe.png',
+  '',
+  '#FFD580',
+  'orange',
+  'red',
+];
+
+const legend = document.getElementById('legend');
+
+layers.forEach((layer, i) => {
+  const color = colors[i];
+  const item = document.createElement('div');
+  const key = document.createElement('span');
+  key.className = 'legend-key';
+  
+  if(color?.toString().endsWith(".png")){
+    console.log(color)
+    key.style.backgroundImage =  `url(${color})`;;
+  }
+  else{
+    key.style.backgroundColor = color;
+  }
+
+  const value = document.createElement('span');
+  value.innerHTML = `${layer}`;
+  item.appendChild(key);
+  item.appendChild(value);
+  legend.appendChild(item);
+});
 
 function closeModal(){
   modal.style.display = "none";
 }
+
 function onIntersect() {
   
     const div = document.getElementById('modal-body');
@@ -211,10 +329,11 @@ function onIntersect() {
         third_row = 'Intersection with Flood Hazard (Area)'
         fourth_row = 'Percentage of Exposed Building'
         fifth_row = 'Exposure Score'
-        tenth_row = 'Sensitivity Score'
-        eleventh_row = 'Magnitude Score'
-        twelveth_row = 'Severity of Consequence Score'
-        thirteenth_row = 'Risk Score'
+        sixth_row = 'Sensitivity Score'
+        seventh_row = 'Magnitude Score'
+        eighth_row = 'Severity of Consequence Score'
+        ninth_row = 'Risk Score'
+        tenth_row = 'Risk Category'
         all_intersect = dict[hazard]
     }
 
@@ -227,10 +346,11 @@ function onIntersect() {
     <th style="background-color:#0166ff; color:#FFFFFF">`+third_row+`</th>
     <th style="background-color:#0166ff; color:#FFFFFF">`+fourth_row+`</th>
     <th style="background-color:#0166ff; color:#FFFFFF">`+fifth_row+`</th>
+    <th style="background-color:#0166ff; color:#FFFFFF">`+sixth_row+`</th>
+    <th style="background-color:#0166ff; color:#FFFFFF">`+seventh_row+`</th>
+    <th style="background-color:#0166ff; color:#FFFFFF">`+eighth_row+`</th>
+    <th style="background-color:#0166ff; color:#FFFFFF">`+ninth_row+`</th>
     <th style="background-color:#0166ff; color:#FFFFFF">`+tenth_row+`</th>
-    <th style="background-color:#0166ff; color:#FFFFFF">`+eleventh_row+`</th>
-    <th style="background-color:#0166ff; color:#FFFFFF">`+twelveth_row+`</th>
-    <th style="background-color:#0166ff; color:#FFFFFF">`+thirteenth_row+`</th>
     </tr>
   </thead>
   <tbody>`;
@@ -248,44 +368,40 @@ function onIntersect() {
                 <td>${properties["Mag"]}</td>
                 <td>${properties["Severity Score"]}</td>
                 <td>${properties["Risk Score"]}</td>
+                <td>${properties["Risk Category"]}</td>
               </tr>`;
         
 
     }
-    table += "</tbody><tfoot><tr><th colspan='1' style='text-align:left; background-color:#0166ff; color:#FFFFFF'>TOTAL:</th><th style='background-color:#0166ff; color:#FFFFFF'>"+separator(properties["area_total"])+"</th><th style='background-color:#0166ff; color:#FFFFFF'>"+separator(properties["intersect_total"])+"</th><th style='background-color:#0166ff; color:#FFFFFF'>"+properties["percentage_total"]+"%</th><th style='background-color:#0166ff; color:#FFFFFF'></th><th style='background-color:#0166ff; color:#FFFFFF'></th><th style='background-color:#0166ff; color:#FFFFFF'></th><th style='background-color:#0166ff; color:#FFFFFF'></th><th style='background-color:#0166ff; color:#FFFFFF'></th></tr></tfoot></table>";
+    table += "</tbody><tfoot><tr><th colspan='1' style='text-align:left; background-color:#0166ff; color:#FFFFFF'>TOTAL:</th><th style='background-color:#0166ff; color:#FFFFFF'>"+separator(properties["area_total"])+"</th><th style='background-color:#0166ff; color:#FFFFFF'>"+separator(properties["intersect_total"])+"</th><th style='background-color:#0166ff; color:#FFFFFF'>"+properties["percentage_total"]+"%</th><th style='background-color:#0166ff; color:#FFFFFF'></th><th style='background-color:#0166ff; color:#FFFFFF'></th><th style='background-color:#0166ff; color:#FFFFFF'></th><th style='background-color:#0166ff; color:#FFFFFF'></th><th style='background-color:#0166ff; color:#FFFFFF'></th><th style='background-color:#0166ff; color:#FFFFFF'></th></tr></tfoot></table>";
 
-    // table += "</tbody></table>";
+
     
     div.innerHTML = table;
     modal.style.display = "block";
     div.appendChild(btn)
 
-      let color = 'purple'
-      if (source.includes("pop_intersect")){
-        color = 'green'
-      }
          
       if (map.getLayer(source) == undefined){
-        
-      intersect_layer = map.addLayer({
-        'id': source,
-        'type': 'fill',
-        'source': source,
-        'paint': {
-        'fill-color': color,
-        'fill-opacity': 1
+
+        map.addLayer({
+          'id': source,
+          'type': 'fill',
+          'source': source,
+          'paint': {
+          'fill-pattern': [
+          'match',
+          ['get', 'Risk Category'],
+          "High",
+          'blue-stripe',
+          "Moderate",
+          'purple-stripe',
+          "Low",
+          'black-stripe',
+          /* other */ '#ccc'
+          ],
         }
-      });
-     
-      outline_layer = map.addLayer({
-        'id': 'line_'+source,
-        'type': 'line',
-        'source': source,
-        'paint': {
-          'line-color': 'red',
-          'line-width': 3
-          }
-      });
+        });
     }
     }
   }else{
@@ -358,7 +474,7 @@ function onChangeHaz() {
               'match',
               ['get', 'Var'],
               1,
-              'yellow',
+              '#FFD580',
               2,
               'orange',
               3,
@@ -437,7 +553,7 @@ function onChangeExpo() {
             'type': 'fill',
             'source': 'bldg',
             'paint': {
-            'fill-color': 'black',
+            'fill-color': 'blue',
             'fill-opacity': 1
             }
       });
@@ -640,6 +756,8 @@ map.on('click', 'bldg_intersect_5yr', (e) => {
     const sen_s = e.features[0].properties["Sensitivity Score"];
     const sev_s = e.features[0].properties["Severity Score"];
     const rs = e.features[0].properties["Risk Score"];
+    const rc = e.features[0].properties["Risk Category"];
+
     if(bldg_popup != undefined){
       bldg_popup.remove();
     }
@@ -653,7 +771,7 @@ map.on('click', 'bldg_intersect_5yr', (e) => {
      
     bldg_int_popup = new mapboxgl.Popup()
     .setLngLat(e.lngLat)
-    .setHTML("<table><tr><th>Barangay Name</th><td>"+bldg_name+"</td></tr><tr><th>Area</th><td>"+separator(area)+"</td></tr><tr><th>Population Affected by Flood Hazard (Area)</th><td>"+separator(all)+"</td></tr><tr><th>Percentage of Exposed Population</th><td>"+percent+"</td><tr><th>Exposure Score</th><td>"+score+"</td></tr><tr><th>Magnitude</th><td>"+mag+"</td></tr></tr></table>")
+    .setHTML("<table><tr><th>Barangay Name</th><td>"+bldg_name+"</td></tr><tr><th>Area</th><td>"+separator(area)+"</td></tr><tr><th>Population Affected by Flood Hazard (Area)</th><td>"+separator(all)+"</td></tr><tr><th>Percentage of Exposed Population</th><td>"+percent+"</td><tr><th>Exposure Score</th><td>"+score+"</td></tr><tr><th>Magnitude</th><td>"+mag+"</td></tr><tr><th>Risk Category</th><td>"+rc+"</td></tr></tr></table>")
     .addTo(map);
     });
 
@@ -669,6 +787,7 @@ map.on('click', 'bldg_intersect_5yr', (e) => {
     const sen_s = e.features[0].properties["Sensitivity Score"];
     const sev_s = e.features[0].properties["Severity Score"];
     const rs = e.features[0].properties["Risk Score"];
+    const rc = e.features[0].properties["Risk Category"];
     if(bldg_popup != undefined){
       bldg_popup.remove();
     }
@@ -682,7 +801,7 @@ map.on('click', 'bldg_intersect_5yr', (e) => {
      
     bldg_int_popup = new mapboxgl.Popup()
     .setLngLat(e.lngLat)
-    .setHTML("<table><tr><th>Barangay Name</th><td>"+bldg_name+"</td></tr><tr><th>Area</th><td>"+separator(area)+"</td></tr><tr><th>Population Affected by Flood Hazard (Area)</th><td>"+separator(all)+"</td></tr><tr><th>Percentage of Exposed Population</th><td>"+percent+"</td><tr><th>Exposure Score</th><td>"+score+"</td></tr><tr><th>Magnitude</th><td>"+mag+"</td></tr></tr></table>")
+    .setHTML("<table><tr><th>Barangay Name</th><td>"+bldg_name+"</td></tr><tr><th>Area</th><td>"+separator(area)+"</td></tr><tr><th>Population Affected by Flood Hazard (Area)</th><td>"+separator(all)+"</td></tr><tr><th>Percentage of Exposed Population</th><td>"+percent+"</td><tr><th>Exposure Score</th><td>"+score+"</td></tr><tr><th>Magnitude</th><td>"+mag+"</td></tr><tr><th>Risk Category</th><td>"+rc+"</td></tr></tr></table>")
     .addTo(map);
     });
 
@@ -698,6 +817,8 @@ map.on('click', 'bldg_intersect_5yr', (e) => {
     const sen_s = e.features[0].properties["Sensitivity Score"];
     const sev_s = e.features[0].properties["Severity Score"];
     const rs = e.features[0].properties["Risk Score"];
+    const rc = e.features[0].properties["Risk Category"];
+
     if(bldg_popup != undefined){
       bldg_popup.remove();
     }
@@ -711,7 +832,7 @@ map.on('click', 'bldg_intersect_5yr', (e) => {
      
     bldg_int_popup = new mapboxgl.Popup()
     .setLngLat(e.lngLat)
-    .setHTML("<table><tr><th>Barangay Name</th><td>"+bldg_name+"</td></tr><tr><th>Area</th><td>"+separator(area)+"</td></tr><tr><th>Population Affected by Flood Hazard (Area)</th><td>"+separator(all)+"</td></tr><tr><th>Percentage of Exposed Population</th><td>"+percent+"</td><tr><th>Exposure Score</th><td>"+score+"</td></tr><tr><th>Magnitude</th><td>"+mag+"</td></tr></tr></table>")
+    .setHTML("<table><tr><th>Barangay Name</th><td>"+bldg_name+"</td></tr><tr><th>Area</th><td>"+separator(area)+"</td></tr><tr><th>Population Affected by Flood Hazard (Area)</th><td>"+separator(all)+"</td></tr><tr><th>Percentage of Exposed Population</th><td>"+percent+"</td><tr><th>Exposure Score</th><td>"+score+"</td></tr><tr><th>Magnitude</th><td>"+mag+"</td></tr><tr><th>Risk Category</th><td>"+rc+"</td></tr></tr></table>")
     .addTo(map);
     });
 

@@ -295,27 +295,27 @@ document.getElementById('intersect').addEventListener('click', onIntersect)
 const layers = [
   '<b>Exposure</b>',
   'Critical Facilities',
-  '<b>Vulnerability</b>',
+  '<b>Flood Hazard</b>',
+  'High Hazard',
+  'Moderate Hazard',
+  'Low Hazard',
+  '<b>Risk Level</b>',
   'High Risk',
   'Moderate Risk',
   'Low Risk',
-  '<b>Flood Hazard</b>',
-  'Low Hazard',
-  'Medium Hazard',
-  'High Hazard',
 ];
 
 const colors = [
   '',
   'blue',
   '',
+  'red',
+  'orange',
+  '#FFD580',
+  '',
   'https://upri-noah.s3.ap-southeast-1.amazonaws.com/test/blue_stripe.png',
   'https://upri-noah.s3.ap-southeast-1.amazonaws.com/test/purple_stripe.png',
   'https://upri-noah.s3.ap-southeast-1.amazonaws.com/test/black_stripe.png',
-  '',
-  '#FFD580',
-  'orange',
-  'red',
 ];
 
 const legend = document.getElementById('legend');

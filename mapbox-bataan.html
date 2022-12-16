@@ -396,8 +396,9 @@ function tableContent(){
         sixth_row = 'Sensitivity Score'
         seventh_row = 'Magnitude Score'
         eighth_row = 'Severity of Consequence Score'
-        ninth_row = 'Risk Score'
-        tenth_row = 'Risk Category'
+        ninth_row = 'Vulnerability Score'
+        tenth_row = 'Risk Score'
+        evelenth_row = 'Risk Category'
         all_intersect = dict[hazard]
     }
 
@@ -415,6 +416,7 @@ function tableContent(){
     <th style="background-color:#0166ff; color:#FFFFFF">`+eighth_row+`</th>
     <th style="background-color:#0166ff; color:#FFFFFF">`+ninth_row+`</th>
     <th style="background-color:#0166ff; color:#FFFFFF">`+tenth_row+`</th>
+    <th style="background-color:#0166ff; color:#FFFFFF">`+evelenth_row+`</th>
     </tr>
   </thead>
   <tbody>`;
@@ -430,19 +432,21 @@ function tableContent(){
       var all_haz = all_intersect[i]["All Hazard"]
       var sensi_score = all_intersect[i]["Sensitivity Score"]
       var mag = all_intersect[i]["Mag"]
-      let expo_score = all_intersect[i]["Exposure Score"]
+      let expo_score = all_intersect[i]["Exposure Total"]
       var severity_score = all_intersect[i]["Severity Score"]
+      var vul_score = all_intersect[i]["Vulnerability Score"]
       var risk_score = all_intersect[i]["Risk Score"]
       var risk_categ = all_intersect[i]["Risk Category"]
       
       if(name == undefined || name == "" || area_total == undefined || intersect_total == undefined || percentage_total == undefined
       || percentage_exp == undefined || area_val == undefined || all_haz == undefined || sensi_score == undefined || mag == undefined
-      || expo_score == undefined || severity_score == undefined || risk_score == undefined || risk_categ == undefined){
+      || expo_score == undefined || severity_score == undefined || risk_score == undefined || risk_categ == undefined || vul_score == undefined){
         
       }else{
         name = name.replace('"','')
         expo_score = expo_score.replace('"','')
         mag = mag.replace('"','')
+        vul_score = vul_score.replace('"','')
         
       table += `<tr>
                 <td>${name.replace('"','')}</td>
@@ -453,13 +457,14 @@ function tableContent(){
                 <td>${sensi_score}</td>
                 <td>${mag.replace('"','')}</td>
                 <td>${severity_score}</td>
+                <td>${vul_score.replace('"','')}</td>
                 <td>${risk_score}</td>
                 <td>${risk_categ}</td> 
               </tr>`;
             }
 
     }
-    table += "</tbody><tfoot><tr><th colspan='1' style='text-align:left; background-color:#0166ff; color:#FFFFFF'>TOTAL:</th><th style='background-color:#0166ff; color:#FFFFFF'>"+separator(all_intersect[0].area_total)+"</th><th style='background-color:#0166ff; color:#FFFFFF'>"+separator(all_intersect[0].intersect_total)+"</th><th style='background-color:#0166ff; color:#FFFFFF'>"+all_intersect[0].percentage_total+"%</th><th style='background-color:#0166ff; color:#FFFFFF'></th><th style='background-color:#0166ff; color:#FFFFFF'></th><th style='background-color:#0166ff; color:#FFFFFF'></th><th style='background-color:#0166ff; color:#FFFFFF'></th><th style='background-color:#0166ff; color:#FFFFFF'></th><th style='background-color:#0166ff; color:#FFFFFF'></th></tr></tfoot></table>";
+    table += "</tbody><tfoot><tr><th colspan='1' style='text-align:left; background-color:#0166ff; color:#FFFFFF'>TOTAL:</th><th style='background-color:#0166ff; color:#FFFFFF'>"+separator(all_intersect[0].area_total)+"</th><th style='background-color:#0166ff; color:#FFFFFF'>"+separator(all_intersect[0].intersect_total)+"</th><th style='background-color:#0166ff; color:#FFFFFF'>"+all_intersect[0].percentage_total+"%</th><th style='background-color:#0166ff; color:#FFFFFF'></th><th style='background-color:#0166ff; color:#FFFFFF'></th><th style='background-color:#0166ff; color:#FFFFFF'></th><th style='background-color:#0166ff; color:#FFFFFF'></th><th style='background-color:#0166ff; color:#FFFFFF'></th><th style='background-color:#0166ff; color:#FFFFFF'></th><th style='background-color:#0166ff; color:#FFFFFF'></th></tr></tfoot></table>";
 
 
     
@@ -856,11 +861,12 @@ map.on('click', 'bldg_intersect_5yr', (e) => {
     const area = e.features[0].properties["Area"];
     const all = e.features[0].properties["All Hazard"];
     const percent = e.features[0].properties["Percentage of Exposed"];
-    const score = e.features[0].properties["Exposure Score"];
+    const score = e.features[0].properties["Exposure Total"];
     const mag = e.features[0].properties["Mag"];
     const sen_s = e.features[0].properties["Sensitivity Score"];
     const sev_s = e.features[0].properties["Severity Score"];
     const rs = e.features[0].properties["Risk Score"];
+    const vs = e.features[0].properties["Vulnerability Score"];
     const rc = e.features[0].properties["Risk Category"];
 
     if(bldg_popup != undefined){
@@ -876,7 +882,7 @@ map.on('click', 'bldg_intersect_5yr', (e) => {
      
     bldg_int_popup = new mapboxgl.Popup()
     .setLngLat(e.lngLat)
-    .setHTML("<table><tr><th>Barangay Name</th><td>"+bldg_name+"</td></tr><tr><th>Area</th><td>"+separator(area)+"</td></tr><tr><th>Population Affected by Flood Hazard (Area)</th><td>"+separator(all)+"</td></tr><tr><th>Percentage of Exposed Population</th><td>"+percent+"</td><tr><th>Exposure Score</th><td>"+score+"</td></tr><tr><th>Magnitude</th><td>"+mag+"</td></tr><tr><th>Risk Category</th><td>"+rc+"</td></tr></tr></table>")
+    .setHTML("<table><tr><th>Barangay Name</th><td>"+bldg_name+"</td></tr><tr><th>Area</th><td>"+separator(area)+"</td></tr><tr><th>Population Affected by Flood Hazard (Area)</th><td>"+separator(all)+"</td></tr><tr><th>Percentage of Exposed Population</th><td>"+percent+"</td><tr><th>Exposure Score</th><td>"+score+"</td></tr><tr><th>Magnitude</th><td>"+mag+"</td></tr><tr><th>Vulnarablity Score</th><td>"+vs+"</td></tr><tr><th>Risk Category</th><td>"+rc+"</td></tr></tr></table>")
     .addTo(map);
     });
 
@@ -887,11 +893,12 @@ map.on('click', 'bldg_intersect_5yr', (e) => {
     const area = e.features[0].properties["Area"];
     const all = e.features[0].properties["All Hazard"];
     const percent = e.features[0].properties["Percentage of Exposed"];
-    const score = e.features[0].properties["Exposure Score"];
+    const score = e.features[0].properties["Exposure Total"];
     const mag = e.features[0].properties["Mag"];
     const sen_s = e.features[0].properties["Sensitivity Score"];
     const sev_s = e.features[0].properties["Severity Score"];
     const rs = e.features[0].properties["Risk Score"];
+    const vs = e.features[0].properties["Vulnerability Score"];
     const rc = e.features[0].properties["Risk Category"];
     if(bldg_popup != undefined){
       bldg_popup.remove();
@@ -906,7 +913,7 @@ map.on('click', 'bldg_intersect_5yr', (e) => {
      
     bldg_int_popup = new mapboxgl.Popup()
     .setLngLat(e.lngLat)
-    .setHTML("<table><tr><th>Barangay Name</th><td>"+bldg_name+"</td></tr><tr><th>Area</th><td>"+separator(area)+"</td></tr><tr><th>Population Affected by Flood Hazard (Area)</th><td>"+separator(all)+"</td></tr><tr><th>Percentage of Exposed Population</th><td>"+percent+"</td><tr><th>Exposure Score</th><td>"+score+"</td></tr><tr><th>Magnitude</th><td>"+mag+"</td></tr><tr><th>Risk Category</th><td>"+rc+"</td></tr></tr></table>")
+    .setHTML("<table><tr><th>Barangay Name</th><td>"+bldg_name+"</td></tr><tr><th>Area</th><td>"+separator(area)+"</td></tr><tr><th>Population Affected by Flood Hazard (Area)</th><td>"+separator(all)+"</td></tr><tr><th>Percentage of Exposed Population</th><td>"+percent+"</td><tr><th>Exposure Score</th><td>"+score+"</td></tr><tr><th>Magnitude</th><td>"+mag+"</td></tr><tr><th>Vulnarablity Score</th><td>"+vs+"</td></tr><tr><th>Risk Category</th><td>"+rc+"</td></tr></tr></table>")
     .addTo(map);
     });
 
@@ -917,11 +924,12 @@ map.on('click', 'bldg_intersect_5yr', (e) => {
     const area = e.features[0].properties["Area"];
     const all = e.features[0].properties["All Hazard"];
     const percent = e.features[0].properties["Percentage of Exposed"];
-    const score = e.features[0].properties["Exposure Score"];
+    const score = e.features[0].properties["Exposure Total"];
     const mag = e.features[0].properties["Mag"];
     const sen_s = e.features[0].properties["Sensitivity Score"];
     const sev_s = e.features[0].properties["Severity Score"];
     const rs = e.features[0].properties["Risk Score"];
+    const vs = e.features[0].properties["Vulnerability Score"];
     const rc = e.features[0].properties["Risk Category"];
 
     if(bldg_popup != undefined){
@@ -937,7 +945,7 @@ map.on('click', 'bldg_intersect_5yr', (e) => {
      
     bldg_int_popup = new mapboxgl.Popup()
     .setLngLat(e.lngLat)
-    .setHTML("<table><tr><th>Barangay Name</th><td>"+bldg_name+"</td></tr><tr><th>Area</th><td>"+separator(area)+"</td></tr><tr><th>Population Affected by Flood Hazard (Area)</th><td>"+separator(all)+"</td></tr><tr><th>Percentage of Exposed Population</th><td>"+percent+"</td><tr><th>Exposure Score</th><td>"+score+"</td></tr><tr><th>Magnitude</th><td>"+mag+"</td></tr><tr><th>Risk Category</th><td>"+rc+"</td></tr></tr></table>")
+    .setHTML("<table><tr><th>Barangay Name</th><td>"+bldg_name+"</td></tr><tr><th>Area</th><td>"+separator(area)+"</td></tr><tr><th>Population Affected by Flood Hazard (Area)</th><td>"+separator(all)+"</td></tr><tr><th>Percentage of Exposed Population</th><td>"+percent+"</td><tr><th>Exposure Score</th><td>"+score+"</td></tr><tr><th>Magnitude</th><td>"+mag+"</td></tr><tr><th>Vulnarablity Score</th><td>"+vs+"</td></tr><tr><th>Risk Category</th><td>"+rc+"</td></tr></tr></table>")
     .addTo(map);
     });
 

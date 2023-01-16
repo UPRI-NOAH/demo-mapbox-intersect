@@ -546,9 +546,8 @@ function onChangeHaz() {
   var categ = document.getElementById("category").value;
 
   let url = ""
-  let pop_url = ""
   // ajaxData(exposure, hazards)
-  if(hazards != "5yr" && hazards != "Find_Haz"){
+  if(hazards != "5yr" && hazards != "Find_Haz" && categ != "Category"){
     url = "https://upri-noah.s3.ap-southeast-1.amazonaws.com/test/bataan_haz_intersect_"+hazards+".geojson"
   }
   else{
@@ -634,8 +633,8 @@ let dict2 = {}
 function ajaxData(exposure, hazards, categ){
   modalLoad.style.display = "block";
   let url = ""
-  let pop_url = ""
-  if(hazards != "5yr" && hazards != "Find_Haz" ){
+  
+  if(hazards != "5yr" && hazards != "Find_Haz" && categ != "Category" ){
     url = "https://upri-noah.s3.ap-southeast-1.amazonaws.com/test/bataan_haz_intersect_"+hazards
   }
   else{
@@ -701,7 +700,26 @@ function ajaxData(exposure, hazards, categ){
 }
 
 function onChangeCateg(){
-  
+  var exposure = document.getElementById("exposure").value;  
+  var hazards = document.getElementById("hazard").value;
+  var categ = document.getElementById("category").value;
+  let url = ""
+  if(hazards != "5yr" && hazards != "Find_Haz" && categ != "Category"){
+    url = "https://upri-noah.s3.ap-southeast-1.amazonaws.com/test/bataan_haz_intersect_"+hazards+".geojson"
+  }
+  else{
+    url="https://upri-noah.s3.ap-southeast-1.amazonaws.com/test/bataan_haz_intersect.geojson"
+  }
+  if(exposure=="bldgs"){
+    source = 'bldg_intersect_'+categ+'_'+hazards
+  }
+
+  if (map.getSource(source) == undefined){
+          map.addSource(source, {
+          type: 'geojson',
+          data: url
+          });
+        }
 if (map.getLayer('bldg_intersect_risk_5yr') != undefined){
     map.removeLayer('bldg_intersect_risk_5yr')
     

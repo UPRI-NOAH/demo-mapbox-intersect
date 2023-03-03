@@ -1,0 +1,2091 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Bataan Layer intersection</title>
+<meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.5.1.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<link href="https://api.mapbox.com/mapbox-gl-js/v2.8.2/mapbox-gl.css" rel="stylesheet">
+<script src="https://api.mapbox.com/mapbox-gl-js/v2.8.2/mapbox-gl.js"></script>
+<script src='https://npmcdn.com/@turf/turf/turf.min.js'></script>
+
+
+<script type="text/javascript"  src="https://cdn.datatables.net/1.12.1/js/jquery.dataTables.min.js"></script>
+<script type="text/javascript"  src="https://cdn.datatables.net/1.12.1/js/dataTables.bootstrap4.min.js"></script>
+<script type="text/javascript"  src="https://cdn.datatables.net/buttons/2.3.2/js/dataTables.buttons.min.js"></script>
+<script type="text/javascript"  src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+<script type="text/javascript"  src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+<script type="text/javascript"  src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+<script type="text/javascript"  src="https://cdn.datatables.net/buttons/2.3.2/js/buttons.html5.min.js"></script>
+<script type="text/javascript"  src="https://cdn.datatables.net/buttons/2.3.2/js/buttons.print.min.js"></script>
+
+<link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.5.2/css/bootstrap.css" rel="stylesheet">
+<link href="https://cdn.datatables.net/1.12.1/css/dataTables.bootstrap4.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.3.2/css/buttons.dataTables.min.css">
+
+<style>
+body { margin: 0; padding: 0; }
+#map { position: absolute; top: 0; bottom: 0; width: 100%; }
+table {
+  font-family: arial, sans-serif;
+  /* border-collapse: collapse;
+  width: 100%; */
+  margin: 0 auto;
+  width: 100%;
+  clear: both;
+  border-collapse: collapse;
+  table-layout: fixed; 
+  word-wrap:break-word; 
+}
+
+td, th {
+  /* border: 1px solid #DCDCDC	; */
+  text-align: left;
+  padding: 8px;
+}
+
+input {
+  width: 100%;
+  /* padding: 12px 20px;
+  margin: 8px 0;
+  display: inline-block;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box; */
+}
+textarea{
+  width: 100%;
+  height: 200px;
+}
+
+.modaledit {
+  display: none; /* Hidden by default */
+  position: fixed; /* Stay in place */
+  z-index: 2; /* Sit on top */
+  padding-top: 10px; /* Location of the box */
+  left: 0;
+  top: 0;
+  width: 100%; /* Full width */
+  height: 100%; /* Full height */
+  overflow: auto; /* Enable scroll if needed */
+  background-color: rgb(0,0,0); /* Fallback color */
+  background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+}
+
+.modal {
+  display: none; /* Hidden by default */
+  position: fixed; /* Stay in place */
+  z-index: 1; /* Sit on top */
+  padding-top: 10px; /* Location of the box */
+  padding-bottom: 10px; /* Location of the box */
+  left: 0;
+  top: 0;
+  width: 100%; /* Full width */
+  height: 100%; /* Full height */
+  overflow: auto; /* Enable scroll if needed */
+  background-color: rgb(0,0,0); /* Fallback color */
+  background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+}
+
+.modalload {
+  display: none; /* Hidden by default */
+  position: fixed; /* Stay in place */
+  z-index: 1; /* Sit on top */
+  padding-top: 150px; /* Location of the box */
+  left: 0;
+  top: 0;
+  width: 100%; /* Full width */
+  height: 100%; /* Full height */
+  overflow: auto; /* Enable scroll if needed */
+  background-color: rgb(0,0,0); /* Fallback color */
+  background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+}
+
+.max_min_button {
+    border:solid 1px;
+    width: 25px;
+    height: 23px;
+    cursor:pointer;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    padding-left: 3px;
+    padding-top: 3px;
+}
+
+/* Modal Content */
+.modal-content {
+  background-color: #fefefe;
+  margin: auto;
+  padding: 20px;
+  border: 1px solid #888;
+  width: 75%;
+}
+
+.modal-content-load {
+  background-color: #fefefe;
+  margin: auto;
+  padding: 20px;
+  border: 1px solid #888;
+  width: 35%;
+}
+
+.modal-content-edit {
+  background-color: #fefefe;
+  margin: auto;
+  padding: 20px;
+  border: 1px solid #888;
+  width: 75%;
+  z-index: 100000; /* Sit on top */
+
+}
+
+
+.center {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  width: 30%;
+}
+
+/* The Close Button */
+.close {
+  color: #aaaaaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+  color: #000;
+  text-decoration: none;
+  cursor: pointer;
+}
+.close2 {
+  color: #aaaaaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.close2:hover,
+.close2:focus {
+  color: #000;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+#hazard {
+  position: absolute;
+  z-index: 400;
+  /* width: 100px; */
+  bottom: 155px;
+  margin-left: 10px;
+  background-color: white;
+  margin-bottom: 10px; /* Location of the box */
+
+}
+
+#exposure {
+  position: absolute;
+  z-index: 400;
+  /* width: 100px; */
+  bottom: 130px;
+  margin-left: 10px;
+  background-color: white;
+}
+
+
+#category {
+  position: absolute;
+  z-index: 400;
+  /* width: 100px; */
+  bottom: 95px;
+  margin-left: 10px;
+  background-color: white;
+}
+
+#editBtn {
+  background-color: #bce8f1;
+  border-color: #0166ff;
+  width: 25px;
+  height: 20px;
+  color: #0166ff;
+  font-size: 12px;
+  padding: 0px;
+}
+#editBtn:hover{
+  background-color: #0166ff;
+  color: white;
+}
+
+#intersect {
+  position: absolute;
+  z-index: 400;
+  /* width: 100px; */
+  bottom: 50px;
+  margin-left: 10px;
+  background-color: white;
+  border-color: #0166ff;
+  /* color: white; */
+  color: #0166ff;
+
+  font-size: 14px;
+}
+#intersect:hover{
+  background-color: #0166ff;
+  color: white;
+}
+
+#legend-btn {
+  position: absolute;
+  z-index: 400;
+  /* width: 100px; */
+  bottom: 40px;
+  position: fixed;
+  right: 0px; 
+  margin-right: 20px;
+  background-color: white;
+  border-color: #0166ff;
+  /* color: white; */
+  color: #0166ff;
+  display: none;
+  font-size: 14px;
+}
+#legend-btn:hover{
+  background-color: #0166ff;
+  color: white;
+}
+
+.map-overlay {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  background: #fff;
+  margin-right: 20px;
+  font-family: Arial, sans-serif;
+  overflow: auto;
+  border-radius: 3px;
+}
+
+#container
+{
+  width:100%;
+  position: relative;
+  /* border:1px solid green;  */
+  overflow: hidden;
+}
+#text
+{
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: block; 
+}
+
+#pencilBtn
+{
+  /* color: #0166ff; */
+  font-size: 15px;
+  padding: 2px 6px;
+  float: right;
+
+}
+
+
+#legend {
+  padding: 10px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  line-height: 18px;
+  height: 200px;
+  margin-bottom: 40px;
+  width: 200px;
+}
+
+.legend-key {
+  display: inline-block;
+  border-radius: 20%;
+  width: 15px;
+  height: 15px;
+  margin-right: 5px;
+}
+
+.table-striped>tbody>tr:nth-child(odd)>td, 
+.table-striped>tbody>tr:nth-child(odd)>th {
+   background-color: white;
+ }
+
+.table-striped>tbody>tr:nth-child(even)>td, 
+.table-striped>tbody>tr:nth-child(even)>th {
+   background-color: #bce8f1; 
+ }
+
+ .dataTable thead .sorting_asc,
+ .dataTable thead .sorting_desc,
+.dataTable thead .sorting {
+    padding-left: 0.75rem !important;
+    padding-right: 0.20rem !important;
+ }
+
+.table th,
+.table td {
+  font-size: 12px
+}
+
+</style>
+</head>
+<body>
+  
+  <div id="myModal" class="modal">
+
+    <!-- Modal content -->
+    <div id="modal-body" class="modal-content">
+      <!-- <span class="close">&times;</span> -->
+    </div>
+  
+  </div>
+
+
+  <div id="modalSensiEdit" class="modaledit">
+
+    <!-- Modal content -->
+    <div id="modal-load-body" class="modal-content-edit">
+      <span class="close">&times;</span>
+      
+      <div>
+        <b>Sensitivity Score</b><table id="editSensiTable"  class="table table-striped table-bordered" style="width:100%">
+          <thead>
+              <tr>
+                <th style="background-color:#0166ff; color:#FFFFFF">Name</th>
+                  <th style="background-color:#0166ff; color:#FFFFFF">Percentage of structure
+                    in good condition <i id="pencilBtn" class="fa fa-pencil"></i></th>
+                  <th style="background-color:#0166ff; color:#FFFFFF">Percentage of structure
+                    in poor condition</th>
+                  <th style="background-color:#0166ff; color:#FFFFFF">Condition Score</th>
+                  <th style="background-color:#0166ff; color:#FFFFFF">Percentage of structure
+                    employing site preparation, hazard resistant,
+                    and/or climate proofed design standards <i id="pencilBtn" class="fa fa-pencil"></i></th>
+                  <th style="background-color:#0166ff; color:#FFFFFF">Percentage of structure 
+                    not employing site preparation, hazard resistant, 
+                    and/or climate proofed design standards</th>
+                  <th style="background-color:#0166ff; color:#FFFFFF">Structure Score</th>
+                  <th style="background-color:#0166ff; color:#FFFFFF">Sensitivity
+                    score</th>
+              </tr>
+          </thead>
+          <tbody>
+          </tbody>
+          </table>
+      </div>
+      <!-- <div class="loader"></div> -->
+
+    </div>
+
+  </div>
+
+
+  <div id="modalAdaptEdit" class="modaledit">
+
+    <!-- Modal content -->
+    <div id="modal-load-body" class="modal-content-edit">
+      <span class="close2">&times;</span>
+      
+      <div>
+        <b>Adaptive Score</b><table id="editAdaptTable"  class="table table-striped table-bordered" style="width:100%">
+          <thead>
+              <tr>
+                <th style="background-color:#0166ff; color:#FFFFFF">Name</th>
+                  <th style="background-color:#0166ff; color:#FFFFFF">Brgy. Rep.<i id="pencilBtn" class="fa fa-pencil"></i></th>
+                  <th style="background-color:#0166ff; color:#FFFFFF">CAIAO 1<i id="pencilBtn" class="fa fa-pencil"></i></th>
+                  <th style="background-color:#0166ff; color:#FFFFFF">CAIAO 2<i id="pencilBtn" class="fa fa-pencil"></i></th>
+                  <th style="background-color:#0166ff; color:#FFFFFF">CAO<i id="pencilBtn" class="fa fa-pencil"></i></th>
+                  <th style="background-color:#0166ff; color:#FFFFFF">CAssO 1<i id="pencilBtn" class="fa fa-pencil"></i></th>
+                  <th style="background-color:#0166ff; color:#FFFFFF">CAssO 2<i id="pencilBtn" class="fa fa-pencil"></i></th>
+                  <th style="background-color:#0166ff; color:#FFFFFF">CAssO 3<i id="pencilBtn" class="fa fa-pencil"></i></th>
+                  <th style="background-color:#0166ff; color:#FFFFFF">CBO<i id="pencilBtn" class="fa fa-pencil"></i></th>
+                  <th style="background-color:#0166ff; color:#FFFFFF">CCDO 1<i id="pencilBtn" class="fa fa-pencil"></i></th>
+                  <th style="background-color:#0166ff; color:#FFFFFF">CCDO 2<i id="pencilBtn" class="fa fa-pencil"></i></th>
+                  <th style="background-color:#0166ff; color:#FFFFFF">CCDO 3<i id="pencilBtn" class="fa fa-pencil"></i></th>
+                  <th style="background-color:#0166ff; color:#FFFFFF">CEIDO<i id="pencilBtn" class="fa fa-pencil"></i></th>
+                  <th style="background-color:#0166ff; color:#FFFFFF">CEEDO 1<i id="pencilBtn" class="fa fa-pencil"></i></th>
+                  <th style="background-color:#0166ff; color:#FFFFFF">CEEDO 2<i id="pencilBtn" class="fa fa-pencil"></i></th>
+                  <th style="background-color:#0166ff; color:#FFFFFF">CHO<i id="pencilBtn" class="fa fa-pencil"></i></th>
+                  <th style="background-color:#0166ff; color:#FFFFFF">CPDO 1<i id="pencilBtn" class="fa fa-pencil"></i></th>
+                  <th style="background-color:#0166ff; color:#FFFFFF">CPDO 2<i id="pencilBtn" class="fa fa-pencil"></i></th>
+                  <th style="background-color:#0166ff; color:#FFFFFF">CPDO 3<i id="pencilBtn" class="fa fa-pencil"></i></th>
+                  <th style="background-color:#0166ff; color:#FFFFFF">CPDO 4<i id="pencilBtn" class="fa fa-pencil"></i></th>
+                  <th style="background-color:#0166ff; color:#FFFFFF">CPDO 5<i id="pencilBtn" class="fa fa-pencil"></i></th>
+                  <th style="background-color:#0166ff; color:#FFFFFF">CPDO 6<i id="pencilBtn" class="fa fa-pencil"></i></th>
+                  <th style="background-color:#0166ff; color:#FFFFFF">CPSO<i id="pencilBtn" class="fa fa-pencil"></i></th>
+                  <th style="background-color:#0166ff; color:#FFFFFF">CSWDO 1<i id="pencilBtn" class="fa fa-pencil"></i></th>
+                  <th style="background-color:#0166ff; color:#FFFFFF">CSWDO 2<i id="pencilBtn" class="fa fa-pencil"></i></th>
+                  <th style="background-color:#0166ff; color:#FFFFFF">CTourO<i id="pencilBtn" class="fa fa-pencil"></i></th>
+                  <th style="background-color:#0166ff; color:#FFFFFF">CTO 1<i id="pencilBtn" class="fa fa-pencil"></i></th>
+                  <th style="background-color:#0166ff; color:#FFFFFF">CTO 2<i id="pencilBtn" class="fa fa-pencil"></i></th>
+                  <th style="background-color:#0166ff; color:#FFFFFF">MISO<i id="pencilBtn" class="fa fa-pencil"></i></th>
+                  <th style="background-color:#0166ff; color:#FFFFFF">Ave.</th>
+              </tr>
+          </thead>
+          <tbody>
+          </tbody>
+          </table>
+      </div>
+      <!-- <div class="loader"></div> -->
+
+    </div>
+
+  </div>
+
+  <div id="modalLoad" class="modalload">
+
+    <!-- Modal content -->
+    <div id="modal-load-body" class="modal-content-load">
+      <!-- <span class="close">&times;</span> -->
+      <h4 class="w3-sans-serif">Intersection still loading. Please wait...</h4>
+      <!-- <div class="loader"></div> -->
+      <img src="noah-loading.gif" class="center" width="auto" height="100px">
+
+    </div>
+  
+  </div>
+
+
+<div id="map"></div>
+<div class='map-overlay' id='legend'>
+  <div class="max_min_button"><span>&#8722;</span></div>
+</div>
+
+<select class="form-control-sm" id="hazard">
+  <option  value="Find_Haz">Choose Hazard</option>
+  <option value="5yr">5 year Bataan</option>
+  <option value="25yr">25 year Bataan</option>
+  <option value="100yr">100 year Bataan</option>
+</select>
+<select class="form-control-sm" id="exposure">
+  <option  value="Find">Choose Exposure</option>
+  <option value="bldgs">Buildings</option>
+  <!-- <option value="population">Population</option> -->
+</select>
+<select class="form-control-sm" id="category">
+  <option  value="Category">Category</option>
+  <option value="risk">Risk</option>
+  <option value="vulnerability">Vulnerability</option>
+  <!-- <option value="population">Population</option> -->
+</select>
+
+<button class="btn info" id="intersect">Intersect</button>
+<button class="btn info" id="legend-btn">Map Key</button>
+
+<script>
+	// TO MAKE THE MAP APPEAR YOU MUST
+	// ADD YOUR ACCESS TOKEN FROM   
+	// https://account.mapbox.com
+
+
+mapboxgl.accessToken = 'pk.eyJ1IjoidmVybzRrYSIsImEiOiJjYWNlMWY0Zjk0MGJhNWRmNDIzNmVjNjc0NDRhMjllOCJ9.fRmHavGBvl6wWemwMZBbfA';
+const map = new mapboxgl.Map({
+container: 'map', // container ID
+style: 'mapbox://styles/mapbox/streets-v11', // style URL
+center: [120.5346, 14.6778], // starting position [lng, lat]
+zoom: 16 // starting zoom
+
+});
+
+var table_custom
+var sensitivity_table
+var adaptive_table
+// var ngrok_url = "127.0.0.1:8001"
+var ngrok_url = "2112-136-158-11-68.ngrok.io"
+
+
+map.on('load', () => {
+
+document.getElementById('exposure').addEventListener('change', onChangeExpo)
+document.getElementById('hazard').addEventListener('change', onChangeHaz)
+document.getElementById('category').addEventListener('change', onChangeCateg)
+document.getElementById('intersect').addEventListener('click', onIntersect)
+
+  map.loadImage(
+  'https://upri-noah.s3.ap-southeast-1.amazonaws.com/test/blue_stripe.png',
+  (err, image) => {
+  // Throw an error if something goes wrong.
+  if (err) throw err;     
+  // Add the image to the map style.
+    map.addImage('blue-stripe', image);
+  
+  }
+  );
+  map.loadImage(
+  'https://upri-noah.s3.ap-southeast-1.amazonaws.com/test/purple_stripe.png',
+  (err, image) => {
+  // Throw an error if something goes wrong.
+  if (err) throw err;     
+  // Add the image to the map style.
+    map.addImage('purple-stripe', image);
+  
+  }
+  );   
+  
+  map.loadImage(
+  'https://upri-noah.s3.ap-southeast-1.amazonaws.com/test/black_stripe.png',
+  (err, image) => {
+  // Throw an error if something goes wrong.
+  if (err) throw err;     
+  // Add the image to the map style.
+    map.addImage('black-stripe', image);
+  
+  }
+  );   
+
+const layers = [
+  '<b>Exposure</b>',
+  'Critical Facilities',
+  '<b>Flood Hazard</b>',
+  'High Hazard',
+  'Moderate Hazard',
+  'Low Hazard',
+  '<b>Vulnerability/Risk</b>',
+  'High',
+  'Moderate',
+  'Low',
+];
+
+const colors = [
+  '',
+  'blue',
+  '',
+  'red',
+  'orange',
+  '#FFD580',
+  '',
+  'https://upri-noah.s3.ap-southeast-1.amazonaws.com/test/blue_stripe.png',
+  'https://upri-noah.s3.ap-southeast-1.amazonaws.com/test/purple_stripe.png',
+  'https://upri-noah.s3.ap-southeast-1.amazonaws.com/test/black_stripe.png',
+];
+
+const legend = document.getElementById('legend');
+
+$(".max_min_button").click(function () {
+    // if ($(this).html() == "-") {
+    //     $(this).html("+");
+    // } else {
+    //     $(this).html("-");
+    // }
+    $("#legend-btn").show(100);
+    $(".map-overlay").hide();
+});
+
+$("#legend-btn").click(function () {
+    $("#legend-btn").hide();
+    $(".map-overlay").show(100);
+});
+
+layers.forEach((layer, i) => {
+  const color = colors[i];
+  const item = document.createElement('div');
+  const key = document.createElement('span');
+  key.className = 'legend-key';
+  
+  if(color?.toString().endsWith(".png")){
+    
+    key.style.backgroundImage =  `url(${color})`;;
+  }
+  else{
+    key.style.backgroundColor = color;
+  }
+
+  const value = document.createElement('span');
+  value.innerHTML = `${layer}`;
+  item.appendChild(key);
+  item.appendChild(value);
+  legend.appendChild(item);
+});
+
+window.addEventListener('beforeunload', (event) => {
+  if(save == 1){
+    event.preventDefault();
+    event.returnValue = '';
+  }
+});
+
+function closeModal(){
+  if(save == 1){
+  
+  if (confirm('Save changes before closing?') == true) {
+    if(save == 1){
+
+      modal.style.display = "none";
+      save = 0
+
+      $.ajax({ 
+         headers: {  "Access-Control-Allow-Origin":"*"
+         },
+         type: "POST",
+         contentType: 'application/json',
+         url: "http://"+ngrok_url+"/edit-sensitivity/",
+         data: JSON.stringify(json_post),
+         cors: true ,
+         secure: true,
+         success: function(response) { 
+          // table_custom.ajax.reload();
+          json_post = []
+          updateIntersectLayer()
+
+         },
+         error: function (xhr) {
+           alert(xhr.statusText)
+         }
+      }); 
+
+
+    }
+  }else{
+    save = 0
+    json_post = []
+    modal.style.display = "none";
+
+    }
+  }else{
+    save = 0
+    json_post = []
+    modal.style.display = "none";
+
+    }
+
+}
+
+function onIntersect() {
+    var exposure = document.getElementById("exposure").value;  
+    var hazards = document.getElementById("hazard").value;
+    var categ = document.getElementById("category").value;
+    
+    closeModal()
+    json_post = []
+    
+    var modalLoad = document.getElementById("modalLoad");
+    if(hazards != "Find_Haz" && exposure != "Find" && categ != "Category"){
+        
+      if(exposure == "bldgs"){
+        ajaxData(exposure, hazards, categ)
+    }
+  }else{
+  
+    alert('Pick Options First!')
+  }
+}
+
+
+
+function tableContent(){
+  
+    modalLoad.style.display = "none";
+
+    const div = document.getElementById('modal-body');
+    const btn = document.createElement("button");
+    btn.innerHTML = "X";
+    btn.type = "button";
+    btn.onclick = closeModal
+    btn.style = "top:1%;right:1%;position:absolute;"
+    btn.style.border="none"  
+  
+    var val = document.getElementById("exposure").value;
+    let hazard = document.getElementById("hazard").value;
+    var categ = document.getElementById("category").value;
+    let val_score = ''
+    let val_categ = ''
+    let first_row = ''
+    let second_row = ''
+    let third_row = ''
+    let fourth_row = ''
+    let fifth_row = ''
+    let sixth_row = ''
+    let seventh_row = ''
+    let eighth_row = ''
+    let ninth_row = ''
+    let tenth_row = ''
+    let txt= ''
+    if (val == "bldgs"){
+        txt = hazard+' Flood Hazard Intersected to Buildings'
+        first_row = 'Building Name <i id="pencilBtn" class="fa fa-pencil">'
+        second_row = 'Building Area'
+        third_row = 'Intersection with Flood Hazard (Area)'
+        fourth_row = 'Percentage of Exposed Building'
+        fifth_row = 'Exposure Score'
+        sixth_row = 'Sensitivity Score <button title="Edit Sensitivity Scores" class="btn info" id="editBtn"><i class="fa fa-pencil"></button>'
+        seventh_row = 'Adaptive Score <button title="Edit Adaptive Scores" class="btn info" id="editBtn"><i class="fa fa-pencil"></button>'
+        // sixth_row = 'Sensitivity Score <i id="pencilBtn" class="fa fa-pencil">'
+        // seventh_row = 'Adaptive Score <i id="pencilBtn" class="fa fa-pencil">'
+        eighth_row = 'Severity of Consequence Score'
+    }
+    if(categ == "vulnerability"){
+        txt += ": Vulnerability"
+        val_score = 'vulnerability_score'
+        val_categ = 'vulnerability_category'
+        ninth_row = 'Vulnerability Score'
+        tenth_row = 'Vulnerability Category'
+    }
+    if(categ == "risk"){
+      
+        txt += ": Risk"
+        val_score = 'risk_score'
+        val_categ = 'risk_category'
+        ninth_row = 'Risk Score'
+        tenth_row = 'Risk Category'
+    }
+
+    var table = '<b>'+txt+'</b><table id="example" class="table table-striped table-bordered" style="width:100%">';
+      
+     table += `<thead><tr>
+    <th style="background-color:#0166ff; color:#FFFFFF">`+first_row+`</th>
+    <th style="background-color:#0166ff; color:#FFFFFF">`+second_row+`</th>
+    <th style="background-color:#0166ff; color:#FFFFFF">`+third_row+`</th>
+    <th style="background-color:#0166ff; color:#FFFFFF">`+fourth_row+`</th>
+    <th style="background-color:#0166ff; color:#FFFFFF">`+fifth_row+`</th>
+    <th style="background-color:#0166ff; color:#FFFFFF">`+sixth_row+`</th>
+    <th style="background-color:#0166ff; color:#FFFFFF">`+seventh_row+`</th>
+    <th style="background-color:#0166ff; color:#FFFFFF">`+eighth_row+`</th>
+    <th style="background-color:#0166ff; color:#FFFFFF">`+ninth_row+`</th>
+    <th style="background-color:#0166ff; color:#FFFFFF">`+tenth_row+`</th>
+    </tr>
+  </thead>
+  <tbody>`;
+    table += "</tbody><tfoot><tr><th colspan='1' style='text-align:left; background-color:#0166ff; color:#FFFFFF'>TOTAL:</th><th style='background-color:#0166ff; color:#FFFFFF'></th><th style='background-color:#0166ff; color:#FFFFFF'></th><th style='background-color:#0166ff; color:#FFFFFF'></th><th style='background-color:#0166ff; color:#FFFFFF'></th><th style='background-color:#0166ff; color:#FFFFFF'></th><th style='background-color:#0166ff; color:#FFFFFF'></th><th style='background-color:#0166ff; color:#FFFFFF'></th><th style='background-color:#0166ff; color:#FFFFFF'></th><th style='background-color:#0166ff; color:#FFFFFF'></th></tr></tfoot></table>";
+
+    div.innerHTML = table;
+    modal.style.display = "block";
+    div.appendChild(btn)
+
+      if (map.getLayer(source) == undefined){
+        map.addLayer({
+          'id': source,
+          'type': 'fill',
+          'source': source,
+          'paint': {
+          'fill-pattern': [
+          'match',
+          ['get', val_categ],
+          "High",
+          'blue-stripe',
+          "Moderate",
+          'purple-stripe',
+          "Low",
+          'black-stripe',
+          /* other */ '#ccc'
+          ],
+        }
+        });
+    }
+
+  url = "http://"+ngrok_url+"/geo_intersect/bataan-intersect/?format=json&hazard_type="+hazard
+  
+  $(document).ready(function () {
+
+   table_custom = $('#example').DataTable( {
+     rowCallback: function( row, data ) {
+          if (val_score == "vulnerability_score"){
+            var impact_score = data.impact_score
+            var vul_score = impact_score * data.adaptive_score
+            
+            $('td:eq(8)', row).html( vul_score.toFixed(2) );
+            var vul_categ = ''
+            if (vul_score == 0){
+              vul_categ = "No Risk"
+            }
+            else if(vul_score <= 3){
+                vul_categ = "Low"
+            }
+            else if(vul_score <= 6){
+              vul_categ = "Moderate"
+            }
+            else{
+              vul_categ = "High"
+            }
+            $('td:eq(9)', row).html( vul_categ );
+
+          }
+          else{
+            $('td:eq(8)', row).html( data.risk_score.toFixed(2) );
+            $('td:eq(9)', row).html( data.risk_category );
+
+          }
+        },
+    dom: 'lBfrtip',
+        // buttons: [
+        //     { extend: 'csv', className: 'btn-default' },
+        //     { extend: 'csv', className: 'btn-info' },
+        //     { extend: 'excel', className: 'btn-success' },
+        //     { extend: 'print', className: 'btn-primary' },
+        // ],
+        buttons: {
+          buttons: [
+                {
+                  extend: 'copy',
+                  className: 'btn-secondary',
+                  footer: true
+                },
+                {
+                  extend: 'csv',
+                  className: 'btn-info',
+                  footer: true
+                },
+                {
+                  extend: 'excel',
+                  className: 'btn-success',
+                  footer: true
+                },
+                {
+                  extend: 'print',
+                  className: 'btn-primary',
+                  footer: true
+                },
+                {
+                text: 'Google Sheet',
+                className: 'btn-success',
+                action: function ( e, dt, node, config ) {
+                    var hazards = document.getElementById("hazard").value;
+                    if (hazards == '5yr'){
+                      var link = '1GoYM2MfSTEugzK9vGxMVNkDe8ws0wzxFSdNdiigrZnw'
+                      gSheet(hazards, link)
+                      window.open('https://docs.google.com/spreadsheets/d/1GoYM2MfSTEugzK9vGxMVNkDe8ws0wzxFSdNdiigrZnw/edit', '_blank');
+                    }
+                    if (hazards == '25yr'){
+                      var link = '16C8RqkvfJY_s4l7xX68J2hkFJQlpsaUUOdXI-vYAfgg'
+                      gSheet(hazards, link)
+                      window.open('https://docs.google.com/spreadsheets/d/16C8RqkvfJY_s4l7xX68J2hkFJQlpsaUUOdXI-vYAfgg/edit', '_blank');
+                    }
+                    if (hazards == '100yr'){
+                      var link = '14uAv86tbCzYkd1Jj7r4UKSwPvqL3kRS0E7OIeTYHZ3w'
+                      gSheet(hazards, link)
+                      window.open('https://docs.google.com/spreadsheets/d/14uAv86tbCzYkd1Jj7r4UKSwPvqL3kRS0E7OIeTYHZ3w/edit', '_blank');
+                    }
+                }
+                }
+              ],
+          dom: {
+                button: {
+                    className: 'btn'
+                },
+                buttonLiner: {
+                    tag: null
+                }
+              }
+        },
+        destroy: true,
+        ajax: {'url':url,
+        "dataSrc": function (json) {
+         return json
+     },
+      },
+        order: [[ 0, 'asc' ]],
+        columns: [
+            { data: 'name'},
+            { data: 'area',render: $.fn.dataTable.render.number( ',', '.', 2 )},
+            { data: 'all_hazard',render: $.fn.dataTable.render.number( ',', '.', 2 )},
+            { data: 'percentage_exposed',render: $.fn.dataTable.render.number( '', '.', 2, '', '%' )},
+            { data: 'exposure_score', bSortable: false},
+            { data: 'sensitivity_score', bSortable: false},
+            { data: 'adaptive_score', bSortable: false},
+            { data: 'severity_score',render: $.fn.dataTable.render.number( '', '.', 2, '', '%' )},
+            { data: 'vulnerability_score'},
+            { data: 'vulnerability_category'},
+        ],
+        footerCallback: function (row, data, start, end, display) {
+          var api = this.api();
+            // Update footer
+            if(data.length != 0){
+              
+            $(api.column(1).footer()).html(separator(data[0].area_total));
+            $(api.column(2).footer()).html(separator(data[0].intersect_total));
+            $(api.column(3).footer()).html(separator(data[0].percentage_total+'%'));
+          }
+
+        },
+    } );
+
+    // $('#example th').on( 'click', 'button', function () {
+    $('#example').on( 'click', 'thead th', function () {
+      var idx = table_custom.column(this).index()
+      var title = table_custom.column( idx ).header();
+
+      // alert($(title).html())
+      if( $(title).html().includes("Sensitivity")) {
+        
+        modalSensiEdit.style.display = "block";
+        sensitivityTable()
+        
+      }
+
+      if( $(title).html().includes("Adaptive")) {
+        
+        modalAdaptEdit.style.display = "block";
+        adaptiveTable()
+
+      }
+      
+    } );
+
+      let header_title = ''
+    $('#example tbody').on( 'click', 'td', function () {
+      var idx = table_custom.cell( this ).index().column;
+      var title = table_custom.column( idx ).header();
+      
+      header_title = $(title).html()
+      var data = table_custom.row($(this).parents('tr')).data();
+      var text = table_custom.cell( this ).data();
+      var inputElement = document.createElement('textarea');
+      inputElement.type = "text";
+
+      if( $(title).html().includes("Building Name")) {
+        
+        inputElement.value = text;
+        
+        inputElement.className = "editable";
+        
+        this.innerHTML = '';
+        
+        this.appendChild(inputElement);
+        
+        $(inputElement).focus();
+
+    }
+
+    } );
+
+    $('#example').on('change', '.editable', function(event) {
+      save = 1
+      var inputVal = this.value;
+      let json_dict = {}
+      var cell = table_custom.cell($(this).parent('td'));
+
+      var data = table_custom.row($(this).parents('tr')).data();
+      var oldData = cell.data();
+
+      cell.data(inputVal);
+
+      json_dict["id"] = data.id
+      json_dict["bldg_intersect_id"] = data.bldg_pk
+      json_dict["name"] = data.name
+      json_dict["good_cond"] = new Number(data.good_cond)
+      json_dict["poor_cond"] = new Number(data.poor_cond)
+      json_dict["poor_cond_score"] = new Number(data.poor_cond_score)
+      json_dict["employing_structure"] = new Number(data.employing_structure)
+      json_dict["not_employing_structure"] = new Number(data.not_employing_structure)
+      json_dict["structure_score"] = new Number(data.structure_score)
+      json_dict["sensitivity_score"] = new Number(data.sensitivity_score)
+      const result = json_post.some(e => e.id == data.id)
+      if(result){
+        
+      }
+      json_post.push(json_dict)
+     
+      if(json_dict["id"] == data.id){
+        console.log("meron na: ", data.id)
+
+      }
+      
+      console.log(json_post)
+            
+    table_custom.draw();
+    
+});
+
+  $('#example').on('blur', '.editable', function() {
+    console.log('blur')
+    
+    // $(this).parent('td').html(this.value);
+    
+    table_custom.draw();
+    // table_custom.ajax.reload();
+    
+});
+
+  });
+
+}
+
+function sensitivityTable(){
+  sensitivity_table = $('#editSensiTable').DataTable({
+    rowCallback: function( row, data ) {
+  
+        var good_cond = data.good_cond
+        var poor_cond = 100-good_cond
+        var poor_cond_score = 0
+        var employing_structure = data.employing_structure
+        var not_employing_structure = 100-employing_structure
+        var struct_score = 0
+
+        if(poor_cond > 20) {
+          poor_cond_score = 4
+        }
+        if(poor_cond <= 20){
+          poor_cond_score = 3
+        }
+        if (poor_cond <= 10){
+          poor_cond_score = 2
+        }
+        if (poor_cond <= 5){
+          poor_cond_score = 1
+        }
+        if (poor_cond == 0){
+          poor_cond_score = 0
+        }
+
+        if(not_employing_structure > 20) {
+          struct_score = 4
+        }
+        if(not_employing_structure <= 20){
+          struct_score = 3
+        }
+        if (not_employing_structure <= 10){
+          struct_score = 2
+        }
+        if (not_employing_structure <= 5){
+          struct_score = 1
+        }
+        if (not_employing_structure == 0){
+          struct_score = 0
+        }
+
+        var sensitivity_score = (poor_cond_score + struct_score) / 2
+
+        $('td:eq(2)', row).html( poor_cond );
+        $('td:eq(3)', row).html( poor_cond_score );
+        $('td:eq(5)', row).html( not_employing_structure );
+        $('td:eq(6)', row).html( struct_score );
+        $('td:eq(7)', row).html( sensitivity_score );
+
+    },
+      destroy: true,
+        ajax: {'url':url,
+        "dataSrc": function (json) {
+        return json
+    },
+    },
+    order: [[ 0, 'asc' ]],
+    columns: [
+            { data: 'name'},
+            { data: 'good_cond'},
+            { data: null},
+            // { data: 'poor_cond'},
+            { data: null},
+            // { data: 'poor_cond_score'},
+            { data: 'employing_structure'},
+            { data: null},
+            // { data: 'not_employing_structure'},
+            // { data: 'struct_score'},
+            { data: null},
+            // { data: 'sensitivity_score'},
+            { data: null},
+        ],
+    });
+
+
+    $('#editSensiTable tbody').on( 'click', 'td', function () {
+      
+      var idx = sensitivity_table.cell( this ).index().column;
+      var title = sensitivity_table.column( idx ).header();
+      
+      var data = sensitivity_table.row($(this).parents('tr')).data();
+      
+      var text = sensitivity_table.cell( this ).data();
+      var inputElement = document.createElement('input');
+      inputElement.type = "number";
+
+      if( $(title).html().includes("pencil")) {
+        
+        inputElement.value = text;
+        
+        inputElement.className = "editable";
+        
+        this.innerHTML = '';
+        
+        this.appendChild(inputElement);
+        
+        $(inputElement).focus();
+
+    }
+
+    } );
+
+
+    $('#editSensiTable').on('change', '.editable', function(event) {
+      save = 1
+      var inputVal = this.value;
+      let json_dict = {}
+      var cell = sensitivity_table.cell($(this).parent('td'));
+
+      var data = sensitivity_table.row($(this).parents('tr')).data();
+
+      var oldData = cell.data();
+
+      cell.data(inputVal);
+      
+      if(inputVal > 100){
+          alert('Value should not exceed 100')
+          cell.data(oldData);
+      }
+
+        if(Math.sign(inputVal) === -1){
+          alert('Value should not be negative')
+          cell.data(oldData);
+        }
+      
+    
+      json_dict["id"] = data.id
+      json_dict["bldg_intersect_id"] = data.bldg_pk
+      json_dict["name"] = data.name
+      json_dict["good_cond"] = new Number(data.good_cond)
+      json_dict["employing_structure"] = new Number(data.employing_structure)
+      
+      const result = json_sensitivity.some(e => e.id == data.id)
+      if(result){
+        
+      }
+      json_sensitivity.push(json_dict)
+    
+      if(json_dict["id"] == data.id){
+        console.log("meron na: ", data.id)
+
+      }
+      
+      console.log(json_sensitivity)
+            
+      sensitivity_table.draw();
+    
+});
+
+  $('#editSensiTable').on('blur', '.editable', function() {
+    console.log('blur')
+    
+    // $(this).parent('td').html(this.value);
+    
+    sensitivity_table.draw();
+    // table_custom.ajax.reload();
+    
+});
+}
+
+function adaptiveTable(){
+    adaptive_table = $('#editAdaptTable').DataTable({
+      rowCallback: function( row, data ) {
+        var arr = [data.brgy_rep ,  data.caiao_1 ,  data.caiao_2 ,  data.cao ,  data.casso_1 ,  data.casso_2 ,  data.casso_3 ,  
+        data.cbo ,  data.ccdo_1 ,  data.ccdo_2 ,  data.ccdo_3 ,  data.ceido ,  data.ceedo_1 ,  data.ceedo_2 ,  data.cho ,  
+        data.cpdo_1 ,  data.cpdo_2 ,  data.cpdo_3 ,  data.cpdo_4 ,  data.cpdo_5 ,  data.cpdo_6 ,  data.cpso ,  data.cswdo_1 ,  
+        data.cswdo_2 ,  data.ctouro ,  data.cto_1 ,  data.cto_2 ,  data.miso]
+
+        let remove_zero = arr.filter(zero => zero != 0);
+
+        // let adaptive_score = (data.brgy_rep + data.caiao_1 + data.caiao_2 + data.cao + data.casso_1 + data.casso_2 + data.casso_3 + 
+        // data.cbo + data.ccdo_1 + data.ccdo_2 + data.ccdo_3 + data.ceido + data.ceedo_1 + data.ceedo_2 + data.cho + 
+        // data.cpdo_1 + data.cpdo_2 + data.cpdo_3 + data.cpdo_4 + data.cpdo_5 + data.cpdo_6 + data.cpso + data.cswdo_1 + 
+        // data.cswdo_2 + data.ctouro + data.cto_1 + data.cto_2 + data.miso) / remove_zero.length
+
+        let sum_adaptive_score = arr.reduce((num, num1) => num + num1, 0);
+
+        let average = sum_adaptive_score / remove_zero.length
+
+        let round_number = average.toFixed(2);
+
+        $('td:eq(29)', row).html( round_number );
+        
+      },
+        destroy: true,
+          ajax: {'url':url,
+          "dataSrc": function (json) {
+          return json
+      },
+      },
+      order: [[ 0, 'asc' ]],
+      scrollX: true,
+      columns: [
+              {data: 'name'},
+              {data: 'brgy_rep'},
+              {data: 'caiao_1'},
+              {data: 'caiao_2'},
+              {data: 'cao'},
+              {data: 'casso_1'},
+              {data: 'casso_2'},
+              {data: 'casso_3'},
+              {data: 'cbo'},
+              {data: 'ccdo_1'},
+              {data: 'ccdo_2'},
+              {data: 'ccdo_3'},
+              {data: 'ceido'},
+              {data: 'ceedo_1'},
+              {data: 'ceedo_2'},
+              {data: 'cho'},
+              {data: 'cpdo_1'},
+              {data: 'cpdo_2'},
+              {data: 'cpdo_3'},
+              {data: 'cpdo_4'},
+              {data: 'cpdo_5'},
+              {data: 'cpdo_6'},
+              {data: 'cpso'},
+              {data: 'cswdo_1'},
+              {data: 'cswdo_2'},
+              {data: 'ctouro'},
+              {data: 'cto_1'},
+              {data: 'cto_2'},
+              {data: 'miso'},
+              {data: null},
+              
+          ],
+      });
+  
+  
+      $('#editAdaptTable').on( 'click', 'td', function () {
+        
+        var idx = adaptive_table.cell( this ).index().column;
+        var title = adaptive_table.column( idx ).header();
+        
+        var data = adaptive_table.row($(this).parents('tr')).data();
+        var text = adaptive_table.cell( this ).data();
+        var inputElement = document.createElement('input');
+        inputElement.type = "number";
+        inputElement.style.width = '30px'
+
+        if( $(title).html().includes("pencil")) {
+          
+          inputElement.value = text;
+          
+          inputElement.className = "editable";
+          
+          this.innerHTML = '';
+          
+          this.appendChild(inputElement);
+          
+          $(inputElement).focus();
+  
+      }
+  
+      } );
+  
+  
+      $('#editAdaptTable').on('change', '.editable', function(event) {
+      save = 1
+      let inputVal = this.value;
+      inputVal = parseInt(inputVal)
+      let json_dict = {}
+      var cell = adaptive_table.cell($(this).parent('td'));
+
+      var data = adaptive_table.row($(this).parents('tr')).data();
+      let oldData = cell.data();
+      oldData = parseInt(oldData)
+      
+      cell.data(inputVal);
+
+      if(inputVal > 4){
+          alert('Value should not exceed 4')
+          cell.data(oldData);
+        }
+        
+
+        if(Math.sign(inputVal) === -1){
+          alert('Value should not be negative')
+          cell.data(oldData);
+        }
+        
+        
+        json_dict["id"] = data.id
+        json_dict["brgy_rep"] = new Number(data.brgy_rep)
+        json_dict["caiao_1"] = new Number(data.caiao_1)
+        json_dict["caiao_2"] = new Number(data.caiao_2)
+        json_dict["cao"] = new Number(data.cao)
+        json_dict["casso_1"] = new Number(data.casso_1)
+        json_dict["casso_2"] = new Number(data.casso_2)
+        json_dict["casso_3"] = new Number(data.casso_3)
+        json_dict["cbo"] = new Number(data.cbo)
+        json_dict["ccdo_1"] = new Number(data.ccdo_1)
+        json_dict["ccdo_2"] = new Number(data.ccdo_2)
+        json_dict["ccdo_3"] = new Number(data.ccdo_3)
+        json_dict["ceido"] = new Number(data.ceido)
+        json_dict["ceedo_1"] = new Number(data.ceedo_1)
+        json_dict["ceedo_2"] = new Number(data.ceedo_2)
+        json_dict["cho"] = new Number(data.cho)
+        json_dict["cpdo_1"] = new Number(data.cpdo_1)
+        json_dict["cpdo_2"] = new Number(data.cpdo_2)
+        json_dict["cpdo_3"] = new Number(data.cpdo_3)
+        json_dict["cpdo_4"] = new Number(data.cpdo_4)
+        json_dict["cpdo_5"] = new Number(data.cpdo_5)
+        json_dict["cpdo_6"] = new Number(data.cpdo_6)
+        json_dict["cpso"] = new Number(data.cpso)
+        json_dict["cswdo_1"] = new Number(data.cswdo_1)
+        json_dict["cswdo_2"] = new Number(data.cswdo_2),
+        json_dict["ctouro"] = new Number(data.ctouro),
+        json_dict["cto_1"] = new Number(data.cto_1),
+        json_dict["cto_2"] = new Number(data.cto_2),
+        json_dict["miso"] = new Number(data.miso)
+        
+        const result = json_adaptive.some(e => e.id == data.id)
+        if(result){
+          
+        }
+        
+        json_adaptive.push(json_dict)
+      
+        if(json_dict["id"] == data.id){
+          console.log("meron na: ", data.id)
+  
+        }
+        
+        console.log(json_adaptive)
+              
+        adaptive_table.draw();
+      
+  });
+  
+    $('#editAdaptTable').on('blur', '.editable', function() {
+      console.log('blur')
+      
+      // $(this).parent('td').html(this.value);
+      
+      adaptive_table.draw();
+      // table_custom.ajax.reload();
+      
+  });
+  }
+
+
+let intersect_data
+let save = 0
+let json_post = []
+let json_sensitivity = []
+let json_adaptive = []
+let url = ''
+let all_intersect
+let pop_ajax
+let source
+let haz_type = document.getElementById("hazard").value;
+function onChangeHaz() {
+  var exposure = document.getElementById("exposure").value;  
+  var hazards = document.getElementById("hazard").value;
+  var categ = document.getElementById("category").value;
+  let url = ""
+  let pop_url = ""
+  
+  url ="http://"+ngrok_url+"/geo_intersect/bataan-intersect-geojson/?format=json&hazard_type="+hazards
+
+  if(exposure=="bldgs"){
+    source = 'bldg_intersect_'+categ+'_'+hazards
+  }
+  
+  if (map.getLayer('5yr') != undefined){
+      map.removeLayer('5yr')
+  }
+  if (map.getLayer('25yr') != undefined){
+      map.removeLayer('25yr')
+  }
+  if (map.getLayer('100yr') != undefined){
+      map.removeLayer('100yr')
+  }
+  if (map.getLayer('bldg_intersect_risk_5yr') != undefined){
+      map.removeLayer('bldg_intersect_risk_5yr')
+      
+  }
+  if (map.getLayer('bldg_intersect_risk_25yr') != undefined){
+      map.removeLayer('bldg_intersect_risk_25yr')
+      
+  }
+  if (map.getLayer('bldg_intersect_risk_100yr') != undefined){
+      map.removeLayer('bldg_intersect_risk_100yr')
+      
+  }
+
+  if (map.getLayer('bldg_intersect_vulnerability_5yr') != undefined){
+      map.removeLayer('bldg_intersect_vulnerability_5yr')
+      
+  }
+  if (map.getLayer('bldg_intersect_vulnerability_25yr') != undefined){
+      map.removeLayer('bldg_intersect_vulnerability_25yr')
+      
+  }
+  if (map.getLayer('bldg_intersect_vulnerability_100yr') != undefined){
+      map.removeLayer('bldg_intersect_vulnerability_100yr')
+      
+  }
+  
+  if(hazards){
+    
+    if (map.getLayer(hazards) == undefined){
+      haz_layer = map.addLayer({
+              'id': hazards,
+              'type': 'fill',
+              'source': hazards,
+              'paint': {
+              'fill-color': [
+              'match',
+              ['get', 'var'],
+              "1.0",
+              '#FFD580',
+              "2.0",
+              'orange',
+              "3.0",
+              'red',
+              /* other */ '#ccc'
+              ],
+              'fill-opacity': 0.5
+              }
+      });
+        
+
+  }
+
+  }
+  if (map.getSource(source) == undefined){
+          map.addSource(source, {
+          type: 'geojson',
+          data: url
+          });
+        }
+  
+}
+let dict = {}
+let dict2 = {}
+
+function ajaxData(exposure, hazards, categ){
+  modalLoad.style.display = "block";
+  let url = ""
+  let pop_url = ""
+
+  url = "http://"+ngrok_url+"/geo_intersect/bataan-intersect-geojson/?format=json&hazard_type="+hazards
+  source = 'bldg_intersect_'+categ+'_'+hazards
+  
+
+  if (map.getSource(source) == undefined){
+          map.addSource(source, {
+          type: 'geojson',
+          data: url
+          });
+        }
+
+  tableContent()
+        
+}
+
+function gSheet(hazard_type, link){
+  let data = {"hazard_yr": hazard_type}
+  
+  $.ajax({ 
+         headers: {  "Access-Control-Allow-Origin":"*"
+         },
+         type: "POST",
+        //  contentType: 'application/json',
+         url: "http://"+ngrok_url+"/edit-sheet/",
+         data: data,
+         cors: true ,
+         secure: true,
+         success: function(response) { 
+            // window.open('https://docs.google.com/spreadsheets/d/'+link+'/edit', '_blank');
+            // var newWindow = window.open('https://docs.google.com/spreadsheets/d/'+link+'/edit',"_blank");
+
+         },
+         error: function (xhr) {
+           alert(xhr.statusText)
+         }
+      }); 
+}
+
+function onChangeCateg(){
+  
+  if (map.getLayer('bldg_intersect_risk_5yr') != undefined){
+      map.removeLayer('bldg_intersect_risk_5yr')
+      
+  }
+  if (map.getLayer('bldg_intersect_risk_25yr') != undefined){
+      map.removeLayer('bldg_intersect_risk_25yr')
+      
+  }
+  if (map.getLayer('bldg_intersect_risk_100yr') != undefined){
+      map.removeLayer('bldg_intersect_risk_100yr')
+      
+  }
+  if (map.getLayer('bldg_intersect_vulnerability_5yr') != undefined){
+      map.removeLayer('bldg_intersect_vulnerability_5yr')
+      
+  }
+  if (map.getLayer('bldg_intersect_vulnerability_25yr') != undefined){
+      map.removeLayer('bldg_intersect_vulnerability_25yr')
+      
+  }
+  if (map.getLayer('bldg_intersect_vulnerability_100yr') != undefined){
+      map.removeLayer('bldg_intersect_vulnerability_100yr')
+      
+  }
+
+}
+function onChangeExpo() {
+  var exposure = document.getElementById("exposure").value;  
+  var hazards = document.getElementById("hazard").value;
+
+  // ajaxData(exposure, hazards)
+  if(exposure == "bldgs"){
+
+      if (map.getLayer('bldg') == undefined){
+        
+      exposure_layer = map.addLayer({
+            'id': 'bldg',
+            'type': 'fill',
+            'source': 'bldg',
+            'paint': {
+            'fill-color': 'blue',
+            'fill-opacity': 1
+            }
+      });
+    }
+
+}
+
+
+}
+
+
+exposure = map.addSource('bldg', {
+type: 'geojson',
+// Use a URL for the value for the `data` property.
+data: 'http://127.0.0.1:8001/geo_intersect/bataan-cpf/?format=json'
+});
+
+map.addSource('5yr', {
+type: 'geojson',
+// Use a URL for the value for the `data` property.
+data: 'http://'+ngrok_url+'/geo_intersect/bataan-flood/?format=json&hazard_type=5yr'
+
+});
+
+map.addSource('25yr', {
+type: 'geojson',
+// Use a URL for the value for the `data` property.
+data: 'http://'+ngrok_url+'/geo_intersect/bataan-flood/?format=json&hazard_type=25yr'
+
+});
+
+map.addSource('100yr', {
+type: 'geojson',
+// Use a URL for the value for the `data` property.
+data: 'http://'+ngrok_url+'/geo_intersect/bataan-flood/?format=json&hazard_type=100yr'
+
+});
+
+var haz_feat
+var bldg_feat
+var bldg_popup
+var popu_popup
+var haz_popup
+var popu_int_popup
+var bldg_int_popup
+
+
+map.on('click', '5yr', (e) => {
+// Copy coordinates array.
+const coordinates = e.features[0].geometry.coordinates.slice();
+let level = e.features[0].properties.var;
+if(level == '1.0'){
+  level = "Low"
+}
+else if(level == '2.0'){
+  level = "Moderate"
+}
+else if(level == '3.0'){
+  level = "High"
+}
+
+while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+}
+ 
+haz_popup = new mapboxgl.Popup()
+.setLngLat(e.lngLat)
+.setHTML("<table><tr> <th>Flood Hazard Level</th> </tr><tr>   <td>"+level+"</td></tr></table>")
+.addTo(map);
+});
+
+
+map.on('click', '25yr', (e) => {
+  
+const coordinates = e.features[0].geometry.coordinates.slice();
+let level = e.features[0].properties.var;
+if(level == '1.0'){
+  level = "Low"
+}
+else if(level == '2.0'){
+  level = "Moderate"
+}
+else if(level == '3.0'){
+  level = "High"
+}
+
+while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+}
+ 
+haz_popup = new mapboxgl.Popup()
+.setLngLat(e.lngLat)
+.setHTML("<table><tr> <th>Flood Hazard Level</th> </tr><tr>   <td>"+level+"</td></tr></table>")
+.addTo(map);
+});
+
+
+map.on('click', '100yr', (e) => {
+// Copy coordinates array.
+const coordinates = e.features[0].geometry.coordinates.slice();
+let level = e.features[0].properties.var;
+if(level == '1.0'){
+  level = "Low"
+}
+else if(level == '2.0'){
+  level = "Moderate"
+}
+else if(level == '3.0'){
+  level = "High"
+}
+
+while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+}
+ 
+haz_popup = new mapboxgl.Popup()
+.setLngLat(e.lngLat)
+.setHTML("<table><tr> <th>Flood Hazard Level</th> </tr><tr>   <td>"+level+"</td></tr></table>")
+.addTo(map);
+});
+
+map.on('click', 'bldg', (e) => {
+  
+const coordinates = e.features[0].geometry.coordinates.slice();
+const bldg_name = e.features[0].properties["name"];
+ 
+while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+}
+if(popu_popup != undefined){
+  popu_popup.remove();
+}
+if(haz_popup != undefined){
+    haz_popup.remove();
+  }
+bldg_popup = new mapboxgl.Popup()
+.setLngLat(e.lngLat)
+.setHTML("<table><tr>  <th>Building</th>  </tr><tr>  <td>"+bldg_name+"</td></tr></table>")
+.addTo(map);
+});
+
+
+let intersect_layer
+let outline_layer
+
+class ToggleControl {
+
+  constructor(options) {
+    this._options = Object.assign({}, this._options, options)
+  }
+
+  onAdd(map, cs) {
+    this.map = map;
+    this.container = document.createElement('div');
+    this.container.className = `${this._options.className}`;
+    return this.container;
+  }
+
+}
+
+var modal = document.getElementById("myModal");
+var modalLoad = document.getElementById("modalLoad");
+var modalSensiEdit = document.getElementById("modalSensiEdit");
+var modalAdaptEdit = document.getElementById("modalAdaptEdit");
+var span = document.getElementsByClassName("close")[0];
+var span2 = document.getElementsByClassName("close2")[0];
+
+span.onclick = function() {
+  closeModalSensiEdit()
+
+}
+span2.onclick = function() {
+  closeModalAdaptEdit()
+
+}
+
+// When the user clicks anywhere outside of the modal, close it
+window.onclick = function(event) {
+  if (event.target == modal) {
+    closeModal()
+
+  }
+  if (event.target == modalSensiEdit) {
+    closeModalSensiEdit()
+
+  }
+  if (event.target == modalAdaptEdit) {
+    closeModalAdaptEdit()
+
+  }
+}
+
+function closeModalAdaptEdit(){
+
+  // modalAdaptEdit.style.display = "none";
+  if(save == 1){
+  
+  if (confirm('Save changes before closing?') == true) {
+    if(save == 1){
+
+      modalAdaptEdit.style.display = "none";
+      save = 0
+
+      $.ajax({ 
+         headers: {  "Access-Control-Allow-Origin":"*"
+         },
+         type: "POST",
+         contentType: 'application/json',
+         url: "http://"+ngrok_url+"/edit-adaptive/",
+         data: JSON.stringify(json_adaptive),
+         cors: true ,
+         secure: true,
+         success: function(response) { 
+          json_adaptive = []
+          adaptive_table.draw();
+          table_custom.ajax.reload();
+          updateIntersectLayer()
+      
+         },
+         error: function (xhr) {
+           alert(xhr.statusText)
+         }
+      }); 
+
+
+    }
+    }else{
+      save = 0
+      json_adaptive = []
+      modalAdaptEdit.style.display = "none";
+      adaptive_table.ajax.reload();
+      table_custom.ajax.reload();
+      }
+    }else{
+      save = 0
+      json_adaptive = []
+      modalAdaptEdit.style.display = "none";
+      adaptive_table.ajax.reload();
+      table_custom.ajax.reload();
+      console.log(json_adaptive)
+
+      }
+
+}
+
+function closeModalSensiEdit(){
+  // modalSensiEdit.style.display = "none";
+  if(save == 1){
+  
+  if (confirm('Save changes before closing?') == true) {
+    if(save == 1){
+
+      modalSensiEdit.style.display = "none";
+      save = 0
+
+      $.ajax({ 
+         headers: {  "Access-Control-Allow-Origin":"*"
+         },
+         type: "POST",
+         contentType: 'application/json',
+         url: "http://"+ngrok_url+"/edit-sensitivity/",
+         data: JSON.stringify(json_sensitivity),
+         cors: true ,
+         secure: true,
+         success: function(response) { 
+          // table_custom.ajax.reload();
+          json_sensitivity = []
+          sensitivity_table.draw();
+          table_custom.ajax.reload();
+          updateIntersectLayer()
+         },
+         error: function (xhr) {
+           alert(xhr.statusText)
+         }
+      }); 
+
+
+    }
+  }else{
+    save = 0
+    json_sensitivity = []
+    modalSensiEdit.style.display = "none";
+    sensitivity_table.ajax.reload();
+    table_custom.ajax.reload();
+
+    }
+  }else{
+    save = 0
+    json_sensitivity = []
+    modalSensiEdit.style.display = "none";
+    sensitivity_table.ajax.reload();
+    table_custom.ajax.reload();
+
+    }
+}
+
+function updateIntersectLayer(){
+
+    var exposure = document.getElementById("exposure").value;  
+    var hazards = document.getElementById("hazard").value;
+    var categ = document.getElementById("category").value;
+
+    source = 'bldg_intersect_'+categ+'_'+hazards
+
+    let url = ""
+    let pop_url = ""
+  
+    url ="http://"+ngrok_url+"/geo_intersect/bataan-intersect-geojson/?format=json&hazard_type="+hazards
+    fetch(url)
+    .then((response) => {
+      return response.json();
+    })
+    .then((data) => {
+      let geojson_intersect = data;
+      const start = performance.now();
+
+      map.getSource(source).setData(geojson_intersect);
+
+      const end = performance.now();
+      console.log(`Execution time: ${end - start} ms`);
+
+    })
+
+    fetch("http://127.0.0.1:8001/geo_intersect/bataan-cpf/?format=json")
+    .then((response) => {
+      return response.json();
+    })
+    .then((data) => {
+      let geojson_cpf = data;
+      const start = performance.now();
+
+      map.getSource('bldg').setData(geojson_cpf);
+
+      const end = performance.now();
+      console.log(`Execution time: ${end - start} ms`);
+
+    })
+
+}
+
+function separator(numb) {
+    // console.log(numb)
+    var str = numb.toString().split(".");
+    str[0] = str[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    return str.join(".");
+}
+
+const toggleControl = new ToggleControl({
+  className: 'mapboxgl-ctrl'
+})
+map.addControl(toggleControl, 'bottom-left')
+
+map.on('click', 'bldg_intersect_risk_5yr', (e) => {
+    
+    // Copy coordinates array.
+    const coordinates = e.features[0].geometry.coordinates.slice();
+    const bldg_name = e.features[0].properties["name"];
+    const area = e.features[0].properties["area"];
+    const all = e.features[0].properties["all_hazard"];
+    const percent = e.features[0].properties["percentage_exposed"];
+    const score = e.features[0].properties["exposure_score"];
+    const mag = e.features[0].properties["mag"];
+    const adaptive_score= e.features[0].properties["adaptive_score"];
+    const sen_s = e.features[0].properties["sensitivity_score"];
+    const sev_s = e.features[0].properties["severity_score"];
+    const rs = e.features[0].properties["risk_score"];
+    const rc = e.features[0].properties["risk_category"];
+
+    if(bldg_popup != undefined){
+      bldg_popup.remove();
+    }
+    if(haz_popup != undefined){
+      haz_popup.remove();
+    }
+    
+    while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+    coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+    }
+     
+    bldg_int_popup = new mapboxgl.Popup()
+    .setLngLat(e.lngLat)
+    .setHTML("<table><tr><th>Barangay Name</th><td>"+bldg_name+"</td></tr><tr><th>Area</th><td>"+separator(area)+"</td></tr><tr><th>Population Affected by Flood Hazard (Area)</th><td>"+separator(all)+"</td></tr><tr><th>Percentage of Exposed Population</th><td>"+percent+"</td><tr><th>Exposure Score</th><td>"+score+"</td></tr><tr><th>Adaptive Score</th><td>"+adaptive_score+"</td></tr><tr><th>Risk Score</th><td>"+rs+"</td></tr><tr><th>Risk Category</th><td>"+rc+"</td></tr></tr></table>")
+    .addTo(map);
+    });
+
+    map.on('click', 'bldg_intersect_risk_25yr', (e) => {
+    
+    const coordinates = e.features[0].geometry.coordinates.slice();
+    const bldg_name = e.features[0].properties["name"];
+    const area = e.features[0].properties["area"];
+    const all = e.features[0].properties["all_hazard"];
+    const percent = e.features[0].properties["percentage_exposed"];
+    const score = e.features[0].properties["exposure_score"];
+    const mag = e.features[0].properties["mag"];
+    const adaptive_score= e.features[0].properties["adaptive_score"];
+    const sen_s = e.features[0].properties["sensitivity_score"];
+    const sev_s = e.features[0].properties["severity_score"];
+    const rs = e.features[0].properties["risk_score"];
+    const rc = e.features[0].properties["risk_category"];
+    if(bldg_popup != undefined){
+      bldg_popup.remove();
+    }
+    if(haz_popup != undefined){
+      haz_popup.remove();
+    }
+
+    while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+    coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+    }
+     
+    bldg_int_popup = new mapboxgl.Popup()
+    .setLngLat(e.lngLat)
+    .setHTML("<table><tr><th>Barangay Name</th><td>"+bldg_name+"</td></tr><tr><th>Area</th><td>"+separator(area)+"</td></tr><tr><th>Population Affected by Flood Hazard (Area)</th><td>"+separator(all)+"</td></tr><tr><th>Percentage of Exposed Population</th><td>"+percent+"</td><tr><th>Exposure Score</th><td>"+score+"</td></tr><tr><th>Adaptive Score</th><td>"+adaptive_score+"</td></tr><tr><th>Risk Score</th><td>"+rs+"</td></tr><tr><th>Risk Category</th><td>"+rc+"</td></tr></tr></table>")
+    .addTo(map);
+    });
+
+    map.on('click', 'bldg_intersect_risk_100yr', (e) => {
+    
+    const coordinates = e.features[0].geometry.coordinates.slice();
+    const bldg_name = e.features[0].properties["name"];
+    const area = e.features[0].properties["area"];
+    const all = e.features[0].properties["all_hazard"];
+    const percent = e.features[0].properties["percentage_exposed"];
+    const score = e.features[0].properties["exposure_score"];
+    const mag = e.features[0].properties["mag"];
+    const adaptive_score= e.features[0].properties["adaptive_score"];
+    const sen_s = e.features[0].properties["sensitivity_score"];
+    const sev_s = e.features[0].properties["severity_score"];
+    const rs = e.features[0].properties["risk_score"];
+    const rc = e.features[0].properties["risk_category"];
+
+    if(bldg_popup != undefined){
+      bldg_popup.remove();
+    }
+    if(haz_popup != undefined){
+      haz_popup.remove();
+    }
+    
+    while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+    coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+    }
+     
+    bldg_int_popup = new mapboxgl.Popup()
+    .setLngLat(e.lngLat)
+    .setHTML("<table><tr><th>Barangay Name</th><td>"+bldg_name+"</td></tr><tr><th>Area</th><td>"+separator(area)+"</td></tr><tr><th>Population Affected by Flood Hazard (Area)</th><td>"+separator(all)+"</td></tr><tr><th>Percentage of Exposed Population</th><td>"+percent+"</td><tr><th>Exposure Score</th><td>"+score+"</td></tr><tr><th>Adaptive Score</th><td>"+adaptive_score+"</td></tr><tr><th>Risk Score</th><td>"+rs+"</td></tr><tr><th>Risk Category</th><td>"+rc+"</td></tr></tr></table>")
+    .addTo(map);
+    });
+
+
+    
+
+map.on('click', 'bldg_intersect_vulnerability_5yr', (e) => {
+    
+    // Copy coordinates array.
+    const coordinates = e.features[0].geometry.coordinates.slice();
+    const bldg_name = e.features[0].properties["name"];
+    const area = e.features[0].properties["area"];
+    const all = e.features[0].properties["all_hazard"];
+    const percent = e.features[0].properties["percentage_exposed"];
+    const score = e.features[0].properties["exposure_score"];
+    const mag = e.features[0].properties["mag"];
+    const adaptive_score= e.features[0].properties["adaptive_score"];
+    const sen_s = e.features[0].properties["sensitivity_score"];
+    const sev_s = e.features[0].properties["severity_score"];
+    const vs = e.features[0].properties["vulnerability_score"];
+    const vc = e.features[0].properties["vulnerability_category"];
+    
+
+    if(bldg_popup != undefined){
+      bldg_popup.remove();
+    }
+    if(haz_popup != undefined){
+      haz_popup.remove();
+    }
+    
+    
+    while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+    coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+    }
+     
+    bldg_int_popup = new mapboxgl.Popup()
+    .setLngLat(e.lngLat)
+    .setHTML("<table><tr><th>Barangay Name</th><td>"+bldg_name+"</td></tr><tr><th>Area</th><td>"+separator(area)+"</td></tr><tr><th>Population Affected by Flood Hazard (Area)</th><td>"+separator(all)+"</td></tr><tr><th>Percentage of Exposed Population</th><td>"+percent+"</td><tr><th>Exposure Score</th><td>"+score+"</td></tr><tr><th>Adaptive Score</th><td>"+adaptive_score+"</td></tr><tr><th>Vulnarablity Score</th><td>"+vs+"</td></tr><tr><th>Vulnarablity Category</th><td>"+vc+"</td></tr></tr></table>")
+    .addTo(map);
+    });
+
+    map.on('click', 'bldg_intersect_vulnerability_25yr', (e) => {
+    
+    const coordinates = e.features[0].geometry.coordinates.slice();
+    const bldg_name = e.features[0].properties["name"];
+    const area = e.features[0].properties["area"];
+    const all = e.features[0].properties["all_hazard"];
+    const percent = e.features[0].properties["percentage_exposed"];
+    const score = e.features[0].properties["exposure_score"];
+    const mag = e.features[0].properties["mag"];
+    const adaptive_score= e.features[0].properties["adaptive_score"];
+    const sen_s = e.features[0].properties["sensitivity_score"];
+    const sev_s = e.features[0].properties["severity_score"];
+    const vs = e.features[0].properties["vulnerability_score"];
+    const vc = e.features[0].properties["vulnerability_category"];
+    if(bldg_popup != undefined){
+      bldg_popup.remove();
+    }
+    if(haz_popup != undefined){
+      haz_popup.remove();
+    }
+
+    while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+    coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+    }
+     
+    bldg_int_popup = new mapboxgl.Popup()
+    .setLngLat(e.lngLat)
+    .setHTML("<table><tr><th>Barangay Name</th><td>"+bldg_name+"</td></tr><tr><th>Area</th><td>"+separator(area)+"</td></tr><tr><th>Population Affected by Flood Hazard (Area)</th><td>"+separator(all)+"</td></tr><tr><th>Percentage of Exposed Population</th><td>"+percent+"</td><tr><th>Exposure Score</th><td>"+score+"</td></tr><tr><th>Adaptive Score</th><td>"+adaptive_score+"</td></tr><tr><th>Vulnarablity Score</th><td>"+vs+"</td></tr><tr><th>Vulnarablity Category</th><td>"+vc+"</td></tr></tr></table>")
+    .addTo(map);
+    });
+
+    map.on('click', 'bldg_intersect_vulnerability_100yr', (e) => {
+    
+    const coordinates = e.features[0].geometry.coordinates.slice();
+    const bldg_name = e.features[0].properties["name"];
+    const area = e.features[0].properties["area"];
+    const all = e.features[0].properties["all_hazard"];
+    const percent = e.features[0].properties["percentage_exposed"];
+    const score = e.features[0].properties["exposure_score"];
+    const mag = e.features[0].properties["mag"];
+    const adaptive_score= e.features[0].properties["adaptive_score"];
+    const sen_s = e.features[0].properties["sensitivity_score"];
+    const sev_s = e.features[0].properties["severity_score"];
+    const vs = e.features[0].properties["vulnerability_score"];
+    const vc = e.features[0].properties["vulnerability_category"];
+
+    if(bldg_popup != undefined){
+      bldg_popup.remove();
+    }
+    if(haz_popup != undefined){
+      haz_popup.remove();
+    }
+    
+    while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+    coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+    }
+     
+    bldg_int_popup = new mapboxgl.Popup()
+    .setLngLat(e.lngLat)
+    .setHTML("<table><tr><th>Barangay Name</th><td>"+bldg_name+"</td></tr><tr><th>Area</th><td>"+separator(area)+"</td></tr><tr><th>Population Affected by Flood Hazard (Area)</th><td>"+separator(all)+"</td></tr><tr><th>Percentage of Exposed Population</th><td>"+percent+"</td><tr><th>Exposure Score</th><td>"+score+"</td></tr><tr><th>Adaptive Score</th><td>"+adaptive_score+"</td></tr><tr><th>Vulnarablity Score</th><td>"+vs+"</td></tr><tr><th>Vulnarablity Category</th><td>"+vc+"</td></tr></tr></table>")
+    .addTo(map);
+    });
+
+  });
+
+
+
+</script>
+ 
+</body>
+</html>

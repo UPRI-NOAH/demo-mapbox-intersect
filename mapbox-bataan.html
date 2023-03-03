@@ -463,7 +463,7 @@ function tableContent(){
       var all_haz = all_intersect[i]["All Hazard"]
       var sensi_score = all_intersect[i]["Sensitivity Score"]
       var mag = all_intersect[i]["Mag"]
-      let expo_score = all_intersect[i]["Exposure Total"]
+      let expo_score = all_intersect[i]["Exposure Score"]
       var severity_score = all_intersect[i]["Severity Score"]
       val_score = all_intersect[i][ninth_row]
       val_categ = all_intersect[i][tenth_row]
@@ -540,7 +540,7 @@ let pop_ajax
 let source
 let haz_type = document.getElementById("hazard").value;
 function onChangeHaz() {
-  
+  console.log('wewewew')
   var exposure = document.getElementById("exposure").value;  
   var hazards = document.getElementById("hazard").value;
   var categ = document.getElementById("category").value;
